@@ -813,3 +813,256 @@ Autenticar e deslogar o usuário com o Firebase Authentication;
 Integrar o comportamento de cadastro com o Architecture Components;
 Apresentar mensagens para o usuário com o SnackBar;
 Adaptar o layout adequadamente para o SnackBar.
+
+#### 18/10/2023
+
+@03-Lidando com possíveis erros
+
+@@01
+Projeto da aula anterior
+
+Caso você precise do projeto com todas as alterações realizadas na aula passada, você pode baixá-lo por meio deste link.
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/archive/aula-2.zip
+
+@@02
+Mensagens personalizadas com LiveData
+
+[00:00] O nosso fluxo de cadastro está funcionando conforme o esperado, porém, da maneira como implementamos, ainda não temos feedback o suficiente em situações que o nosso cadastro falha. O que eu quero dizer com isso? Independentemente do que ocorreu de falha, só conseguimos mandar uma mensagem para o nosso usuário, indicando que ocorreu uma falha.
+[00:20] O ideal, nesse tipo de solução, é que o nosso usuário saiba o que ele errou, como por exemplo, ele saiba que ele tentou mandar um e-mail, só que aquele e-mail, ele já existe, ou então ele tentou criar um usuário, só que a senha, ela não é compatível com o mínimo dos requisitos. Portanto, agora vamos ver uma técnica em que conseguimos mandar uma mensagem mais específica para o nosso usuário.
+
+[00:44] Então vamos começar. Para isso, o que precisamos fazer? Primeiro, temos que usar uma solução na qual temos mais de uma resposta no nosso live data. Nós não podemos trabalhar apenas com boolean, porque o boolean, ele só vai devolver verdadeiro ou falso, ele não é capaz de devolver alguma informação a mais.
+
+[01:03] Portanto, agora vamos ver uma técnica em que conseguimos devolver, além do boolean, também essa informação a mais. Ela terá como padrão, até mesmo um recurso que usei no Alura+, quando eu falei sobre coroutines, que foi esse cara chamado Resource. Ele tem essa capacidade de colocar uma informação dentro dele, e até mesmo outras informações.
+
+[01:25] Nesse caso é só um dado, representando o que queremos mandar, mas também podemos indicar que o resource, ele vai ter, por exemplo, um erro. Esse erro pode ser um nullable, que por padrão ele é nulo, dado que podemos trabalhar com o resource que terá apenas os seus valores e também agora o resource que, além dos seus valores, ele pode também ter um erro.
+
+[01:45] Todas as vezes que usarmos esse resource, podemos verificar: olha, você tem erro? Se você tem erro, você pode indicar para mim o que é esse erro. Então é ali que será a base para conseguirmos trabalhar com essas informações a mais. É isso que vamos ver agora. O que temos que fazer agora, que estamos com esse resource que permite colocar o erro? É justamente adaptar o nosso viewModel.cadastra para trabalhar com esse resources.
+
+[02:09] Primeiro vamos trabalhar onde está a fonte de todos os dados, que é a partir do nosso FirebaseAuthRepository, temos que converter o cadastra para que seja um resource de boolean, fun cadastra(email: String, senha: String): LiveData<Resource<Boolean>>, porque ainda assim vamos trabalhar com boolean para saber se deu certo ou não, só que agora vamos ter uma informação a mais, que é o erro que vai acontecer.
+
+[02:28] Então no val liveData = MutableLiveData<Resource<Boolean>>(), teremos um resource de boolean aqui também no MutableLiveData. Agora, no momento em que tentamos mandar um valor, vamos mandar uma instância de resource, no liveData.value. No caso do resource, podemos colocar apenas o valor no nosso construtor, que ele já entende que é um boolean, não precisa identificar com o generics, isso durante a instância.
+
+[02:51] liveData.value = Resource( dado:true). Agora, quando temos a falha, além de mandar o boolean, podemos mandar também a informação de erro, podemos falar que ocorreu uma falha, então podemos falar: falha no cadastro. liveData.value = Resource (dado:false, erro: "Falha no cadastro"), é uma mensagem personalizada que podemos fazer.
+
+[03:06] Agora que temos essa mensagem personalizada, precisamos adaptar um pouco o nosso código, para ele pegar essa mensagem personalizada. Para isso, primeiro vamos no nosso view model de cadastro, então CadastroUsuarioViewModel, precisamos modificar aqui esse return, então fun cadastra(email: String, senha: String): LiveData<Resource<Boolean>>, importando aqui o resource.
+
+[03:28] Agora aqui, no nosso CadastroUsuarioFragment precisamos trabalhar com resource, porque não é mais um boolean, será um recurso que vamos ter, que ele dará a disponibilidade para pegarmos o dado, então se temos o dado, significa que o cadastro foi feito e, se não temos, o que precisamos fazer é apenas verificar se existe pelo menos um erro personalizado.
+
+[03:49] É da seguinte forma: pegarmos o recurso.erro ? E podemos colocar, por exemplo, aquele nosso Elvis expression, que ele vai devolver o erro se ele existir. Caso contrário, podemos colocar uma mensagem genérica, que seria essa: ocorreu uma falha no cadastro. Podemos colocar essa mensagem genérica.
+
+[04:08] Aqui sim podemos simplesmente colocar val mensagemErro: String = recurso.erro? : "Ocorreu uma falha no cadastro", e o nosso snackbar, ele vai receber esse mensagemErro. Então é basicamente isso que precisamos fazer para ter uma mensagem que vem também do nosso repositório.
+
+[04:22] Vamos agora executar e vamos ver se conseguimos pegar essa mensagem de erro, dado que o nosso repositório, ele está mandando essa mensagem: falha no cadastro. Vamos pegar a aplicação, vamos colocar "teste" e "teste" nos campos.
+
+[04:38] Agora vamos ver que teve essa mensagem de falha no cadastro. Então agora sim temos poderes suficientes para pegar os possíveis erros. Só que agora, o que é importante sabermos é quais são esses possíveis erros. Vamos ver isso a seguir.
+
+@@03
+Apresentando mensagens de erros específicos
+
+[00:00] Agora que conseguimos mandar uma mensagem personalizada na tela de cadastro, somos capazes de identificar qual foi o real problema que aconteceu durante o cadastro e mandar uma mensagem mais direcionada para o nosso usuário, porque, atualmente, ao clicar em "Cadastrar", a única mensagem que o nosso usuário tem é que ocorreu uma falha no cadastro.
+[00:18] Mas ele não sabe exatamente qual foi o problema que aconteceu para esse cadastro falhar. E é isso o que vamos fazer agora, durante a nossa implementação. Mas como podemos identificar qual é o problema que aconteceu? Para isso, podemos investigar o código que temos no firebaseAuth.createUserWithEmailAndPassword. Essa investigação pode ser feita a partir do atalho "Ctrl + Q", do IntelliJ , que mostra a documentação, como vemos aqui.
+
+[00:44] Na documentação, basicamente teremos o acesso à assinatura, à descrição do método, como também as possibilidades de exceções. Aqui sim já conseguimos identificar com mais precisão o que pode acontecer durante a criação de um cadastro. Então veja que temos a exception "FirebaseAuthWeakPasswordException", que representa aquela situação em que a nossa senha, ela é fraca.
+
+[01:09] Ou seja, ela tem menos do que 6 dígitos - isso considerando a nossa regra de trabalho atual. Também temos essas outras exceptions, que seria o "FirebaseAuthInvalidCredentialsException", que é quando o e-mail, ele está mal informado, então o e-mail é inválido. E, por fim, temos esse "FirebaseAuthUserCollisionException", que é quando tentamos cadastrar, só que aquele e-mail já existe.
+
+[01:33] Então veja que precisamos identificar essas situações. Quando identificamos uma delas, precisamos colocar uma mensagem mais direcionada para o nosso usuário. Como fazemos isso? Basicamente, o que precisamos fazer é que, no momento em que acontece uma falha, temos que pegar essa exceção e verificar se ela faz parte de uma dessas instâncias.
+
+[01:53] Por exemplo, vou pegar o exception, tarefa.addOnFailureListener {exception: Exception ->. Vou também colocar exception nessa parte do nosso log catch, Log.e(TAG, msg: "cadastra: cadastro falhou", exception). Logo em seguida, eu vou verificar, a partir de alguma estrutura condicional, que temos no Kotlin.
+
+[02:08] Uma das possibilidades é até mesmo usar o when expression, recebendo a exception: when(exception){}. Dentro dele, nós verificamos: olha, isso aqui é um is FirebaseAuthWeakPasswordException ->? Se for, o que eu quero fazer? Eu quero que tenha uma mensagem exclusiva para ele, que é, por exemplo, -> "Senha precisa de pelo menos 6 dígitos".
+
+[02:32] Novamente, lembrando que hoje, no momento em que eu estou gravando o curso, essa é a regra que é utilizada no Firebase, pode ser que no momento em que você fizer o curso, a regra seja diferente. Fique à vontade em mandar uma mensagem que seja mais precisa, pode até ser senha fraca, é uma mensagem também possível. Fique à vontade para usar o seu critério, só entenda bem a proposta que vamos fazer aqui.
+
+[02:55] Agora que computamos essa primeira regra, como podemos pegar essa mensagem? Basicamente, o when expression, ele devolve essas computações, então ele devolve esses valores que colocamos em cada uma das opções. Nós podemos determinar que o valor que será retornado, ele será uma string sempre: val mensagemErro: String = whe(exception){.
+
+[03:12] Então todas as opções no when sempre serão uma string. Quando restringimos dessa forma, basicamente precisamos colocar também a situação que não atende às opções que esperamos, que é o caso do else, que é uma situação que nenhum dos erros que tentamos identificar, eles aconteceram. Se isso aconteceu de verdade, é um erro desconhecido.
+
+[03:34] Então também precisamos ter esse tipo de ação para que o nosso usuário, ele saiba até mesmo nos comunicar, ele fala: olha, eu estou tentando fazer o cadastro e está acontecendo um erro desconhecido. Nós também não vamos saber, mas conseguimos pelo menos imaginar: olha, não foi nenhuma das regras do Firebase, talvez é alguma outra coisa que não sabemos o que é e podemos investigar com mais precisão.
+
+[03:55] Agora que temos a mensagem, mandamos a mensagem ao invés daquela que está em hardcoded, liveData.value = Resource(dado: false, mensagemErro). Podemos testar, fazer a simulação de uma senha, que ela é fraca, e vamos ver o que acontece. Vamos agora executar o nosso aplicativo, muito provavelmente ele já executou rapidamente, vamos ver se funciona. Vou colocar "teste" e "teste", e vamos ver o que acontece ao fazer essa execução.
+
+[04:20] Olha só, ele colocou o erro desconhecido. Por que isso aconteceu? Porque ele não conseguiu atingir primeiro a nossa exception. Se investigarmos no log catch, vamos ver que aquela outra exception, de credencial, ela acabou sendo prioritária nesse caso. Então veja que ela será necessária para conseguirmos também testar a situação em que a nossa senha é fraca.
+
+[04:44] Então vamos colocar também essa exception. De volta ao código, abaixo do nosso is FirebaseAuthWeakPasswordException, vamos colocar is FirebaseAuthInvalidCredentialsException ->. Agora eu vou fazer o import e, basicamente, eu vou colocar aqui que -> "E-mail inválido". Basicamente é essa a informação que precisamos ter. Vamos executar, para vermos isso acontecendo. Vamos fazer o mesmo teste de antes. Na aplicação, eu vou colocar "teste" e "teste". Olha só.
+
+[05:17] “E-mail inválido”. Vamos agora colocar o um outro e-mail, só para ver o que acontece com a senha fraca. Então o teste com "teste@aluraesporte.com".
+
+[05:27] “Senha precisa ter pelo menos 6 dígitos”. Então colocamos mais um dígito na senha. Vamos tentar cadastrar. Agora ele conseguiu fazer o cadastro com sucesso. Então, com aquele e-mail que colocamos no teste, ele conseguiu fazer. Vamos então colocar o mesmo e-mail, eu acho que era esse aqui, vamos ver se eu acerto. Eu dei um "Tab", para ver se não pegou nada. Agora sim, eu vou tentar cadastrar esse mesmo e-mail.
+
+[05:50] “Erro desconhecido”. Por quê? Porque nós não conseguimos identificar esse problema que pode acontecer, que é a partir daquela outra exception que nós vimos: is FirebaseAuthUserCollisionException ->, é essa a exception. Se você tiver dúvida, sempre volte no método, veja a documentação, verifique qual é a exception, e você pode colocar sem nenhuma dúvida.
+
+[06:13] Não precisa ficar lembrando, decorando, sempre consulte, aproveite esse momento para isso. Só precisamos colocar que o e-mail já existe, -> "E-mail já cadastrado". É uma das mensagens que podemos mandar.
+
+[06:29] Agora sim estamos atendendo às possibilidades de problemas que podem acontecer, que são conhecidos a partir dessa API do Firebase. Na aplicação, podemos colocar "teste@aluraesporte.com". Eu vou até mesmo verificar se a senha, ela vem primeiro, antes de verificar se existe o cadastro, é uma coisa até interessante de vermos.
+
+[06:48] “A senha precisa ter os 6 dígitos”. Então veja que até mesmo tem uma certa prioridade entre eles, é uma coisa também que você pode explorar.
+
+[06:56] “E o e-mail já cadastrado”. Perceba que agora sim estamos atendendo todas as situações. Agora eu vou colocar o outro e-mail, "teste4321@aluraesporte.com", para garantir que não é repetido.
+
+[07:07] “O cadastro realizado com sucesso”. Então perceba que agora sim, com essa estratégia que fizemos, nós conseguimos mandar uma mensagem, um feedback muito mais preciso para o nosso usuário.
+
+[07:17] Ele vai ter capacidade o suficiente de conseguir se direcionar e falar: poxa, eu errei isso daqui; não, eu errei a minha senha; na verdade, esse e-mail já existe, deixa eu tentar o outro. É muito mais interessante para o nosso usuário esse tipo de feedback. Até mais.
+
+@@04
+Validando cada campo do cadastro
+
+[00:00] Conseguimos configurar o nosso aplicativo para devolver uma mensagem adequada considerando as mensagens esperadas, que podem acontecer durante um problema com o firebaseAuth.CreateUserWithEmailAndPassword, que seria a mensagem de senha fraca, de e-mail inválido e de cadastro que já existe.
+[00:18] Porém vamos perceber que isso ainda não é o suficiente para atender as necessidades gerais quando trabalhamos com essas chamadas. Por exemplo, se chegarmos na nossa tela de cadastro da nossa aplicação, não preenchermos nada e clicarmos em "Cadastar", olha o que vai acontecer.
+
+[00:34] O nosso aplicativo terá um crash, uma situação horrível para o nosso usuário, uma experiência que ninguém quer ter e que muitas pessoas até mesmo desinstalam o aplicativo por conta disso. Por que esse crash acontece? Porque a exception que aconteceu aqui, ela não faz parte de uma exception que é envolvida dentro da regra de negócio que vem dentro do OnFailure.
+
+[00:55] Ela é uma regra de negócio que ela irá vai estourar essa exception e vai pedir para que alguém trate essa exception, porque ela não esperava isso. Como podemos ver, é um illegal argument exception.
+
+[01:06] Está falando que a string que foi dada para o createUserWithEmailAndPassword não pode ser nem vazia e nem nula. Então veja que fazer apenas esse tratamento dentro OnFailure, que fizemos na aula passada, não é o suficiente para atender tudo o que nós esperamos, precisamos fazer passos a mais.
+
+[01:26] Uma situação fácil de resolver isso aqui seria a seguinte: basicamente, nós pegamos esse código que estamos trabalhando com a nossa val tarefa, com a task do Google, e envolvemos de um try catch, que pode sim identificar se foi o illegal argument exception. Porque, novamente, o que estourou aqui foi uma exception diretamente do createUserWithEmailAndPassword, nem chegou a executar o addOnFailureListener.
+
+[01:52] Então, basicamente, podemos simplesmente selecionar e envolver no try catch. Tem alguns atalhos do IntelliJ que faz isso, que é o "Ctrl + Alt + T", ele mostra essa opção, que é o surround with. Aqui podemos envolver dentro dessa opção, que é o "try / catch". Ele já coloca todo o código no try catch.
+
+[02:08] Para sermos mais precisos, podemos colocar aquela catch (e: IllegalArgumentException){}. Dentro desse catch, podemos fazer exatamente a mesma coisa que fazemos com o nosso liveData.value, mandando a mensagem mais especifica, liveData.value = Resource(dado: false, erro: "E-mail ou senha não pode ser vazio").
+
+[02:28] Nós podemos colocar aqui essa mensagem. Agora sim podemos testar, executar, e vamos ver que agora nós evitamos esse problema, justamente porque estamos tratando essa exceção.
+
+[02:41] Então veja que essa é uma das maneiras de resolvermos esse problema. Só que perceba que isso vai um pouco além do que só mandar essa mensagem. Em situações como essa, o mais interessante é até mesmo façamos uma validação por campo. Só para finalizar essa etapa e deixar o cadastro redondo, o que vamos fazer aqui, além de deixar esse try catch, que é mais seguro, também faremos uma validação campo a campo.
+
+[03:05] Para que, no momento em que ele mande o cadastro sem nada, até mesmo essa parte de confirmação de senha, apresente uma mensagem de erro falando: olha, o e-mail é necessário, a senha é necessária e confirmar a senha tem que ser exatamente a mesma senha do que colocamos no campo senha.
+
+[03:24] Então é isso que vamos fazer, antes mesmo de mandar para o catch. Dessa maneira, poderíamos evitar esse try catch, mas, novamente, o try catch é interessante justamente para evitar o crash. Se você tem essa possibilidade de crash, você precisa tratar ou aqui ou em outro lugar.
+
+[03:39] Vamos deixar aqui, no firebaseAuthRepository, porque não estamos tratando em nenhum outro lugar. Só que, novamente, o nosso foco agora é trabalhar nessa parte mais visual. Como vamos fazer isso? Como vamos fazer essas validações? Basicamente fazemos a validação no momento em que pegamos os campos, no momento em que clicamos no botão "Cadastar".
+
+[03:57] Basicamente, podemos pegar a informação, no caso do e-mail, podemos verificar se ele está em branco, que é esse if(email.isBlank()). No caso seria se ele está vazio, mesmo que ele tenha um espaço, mesmo que ele tenha um espaço em branco, ele também pode ser considerado vazio, por isso o ,isBlank, não só o is empty.
+
+[04:17] Aqui dentro, podemos simplesmente colocar o e-mail, ele é necessário. Aqui nós pegamos o cadastro_usuario_email. e falamos a partir do .error =, que é um campo que temos do text input layout, cadastro_usuario_email.error = "E-mail é necessário", ou não pode ser vazio, a mensagem que você preferir. Essa é uma possibilidade.
+
+[04:39] Em seguida, podemos fazer a mesma coisa para quem? Para a nossa senha, então if(senha.), podemos simplesmente colocar que se ela for branca, .isBlank(){}, vamos simplesmente deixar como cadastro_usuario_senha.error = e vamos colocar = "Senha é necessária". É isso que precisamos colocar aqui como mensagem inicial.
+
+[05:05] Nós vamos testar aqui, ainda não vai estar 100%, mas já conseguimos ver cada um dos campos, para ver se pelo menos os campos funcionam. Na aplicação, se tentarmos fazer o cadastro sem preencher o e-mail e senha, ele já mostra o erro para cada um dos campos.
+
+[05:14] Mesmo que ainda ele mande para o nosso cadastro. Então nós conseguimos fazer em ambos os campos, só que agora precisamos fazer também no campo de confirmação de senha. Basicamente, temos que replicar o que fizemos anteriormente no onViewCreated, abaixo do val senha.
+
+[05:28] Eu vou chamar de val confirmaSenha: String = cadastro_usuario_confirma_senha.editText?.text.toString(), e vou colocar o campo cadastro_usuario_confirma_senha. Só precisamos fazer mais uma validação, colocando um if(senha), indicando se a senha, ela for diferente do confirma senha, if(senha != confirmaSenha){}, queremos mandar uma mensagem de erro no cadastro_usuario_confirma_senha.
+
+[05:52] Será cadastro_usuario_confirma>senha.error = "Senhas diferentes". Essa é a mensagem que precisamos fazer. Veja que a validação, nós estamos fazendo. Podemos até mesmo testar, para ver o que acontece. Na nossa aplicação, primeiro a senha será igual, então ele não mostra a mensagem. Agora aqui as senhas serão diferentes. Então ele mostra a mensagem.
+
+[06:10] Já conseguimos colocar cada uma das validações em cada um dos campos. O que precisamos fazer agora é só evitar essa chamada do cadastro enquanto os campos não forem válidos. Uma das maneiras que podes fazer é a seguinte: podemos criar uma variável chamada de válido, val valido = true, e ela vai começar como true, porque se ela for verdade, queremos executar esse código do cadastro.
+
+[06:32] Então, após as verificações dos campos, vamos colocar if(valido){, executa todo esse código nosso do viewModel.cadastra. Mas o valido precisa ser válido, true. E quando o valido não é válido? É quando ele atinge qualquer um desses if de validação dos campos, seja a senha ou e-mail em branco ou quando temos uma senha e a confirmação de senha diferentes.
+
+[06:54] Então, dentro de if(email.isBlank()), nós colocamos valido = false. Fazemos isso para cada um dos campos. Entenda que essa é uma das possibilidades de implementação, mas podem existir outras. Fique à vontade para usar a implementação que você preferir. Executando novamente, vamos ver o que acontece. Vamos fazer as simulações. Cadastrar com os campos em branco.
+
+[07:12] Cadastrando, beleza, deu as mensagens. Vou colocar uma senha diferente, ele está colocando todos os campos. Ele não executou o nosso view model. É isso o que precisamos fazer. Agora, colocando os campos, vamos ver o que acontece.
+
+[07:26] Olha só, ele ainda mostra as mensagens, mesmo que isso não necessariamente seja verdade. Então veja que mesmo mostrando só a mensagem, ainda não é o suficiente. O que precisamos fazer? Todas as vezes que tentarmos pegar a informação e fazer a validação, temos que limpar esses erros anteriormente.
+
+[07:44] Então, antes de chegar nessa parte de coleta da informação, no val email, pegamos o nosso cadastro_usuario_email, cadastro_usuario_senha e o cadastro_usuario_confrma_senha e limpamos o erro, a partir do .error, deixamos como nulo: cadastro_usuario_email.error = null.
+
+[07:59] Basicamente é isso, é algo bem simples, nós vamos lá e limpamos os erros. Para cada um dos campos, fazemos essa chamada. Então aqui estamos limpando os erros. Agora sim, se fizermos a simulação e tentarmos novamente mandar as informações, teremos os erros ainda. Então veremos que os erros aconteceram. Aqui acontecem.
+
+[08:19] Mas percebe que ele teve uma atualização? Ele está sempre atualizando, para ver se realmente ainda está errado. Então agora eu coloco o e-mail. Olha só, ele já deixa o e-mail pelo menos, entre aspas, válido.
+
+[08:31] O válido, para nós, nesse caso, é só que ele não esteja em branco. Vamos ver a senha. Vou tentar um em branco, vamos ver o que acontece.
+
+[08:37] Em branco, ela já apresenta alguma falha, porque o em branco não é algo válido para nós, é o isBlank que eu mostrei para vocês. Agora, se eu coloco um T, ele já fala: beleza, está certo. Como também coloquei um T aqui na confirmação. Eu vou colocar um E.
+
+[08:50] Ele já mostra que é diferente. Então agora sim a validação, ela já está acontecendo, já está válido. Olhe o que vai acontecer.
+
+[08:57] “E-mail inválido”. Ele já está entrando agora também na nossa regra de negócio, do cadastro. Basicamente, nós não mexemos tanto no que existe dentro do cadastro, a não ser aquele try catch para evitar aquela exceção de illegal argument exception. Só que agora, só vamos mandar realmente para o cadastro quando não for verdade, quando não tivermos aquele problema de illegal argument exception.
+
+[09:20] Estamos mandando, somos bons vizinhos de mandar a informação que realmente o nosso cadastro, ele espera. Era isso mesmo o que eu queria mostrar para vocês, uma maneira na qual conseguimos, além de fazer as validações dentro do nosso cadastro, fazer também as validações na parte da tela. Então agora sim, na parte da tela da aplicação, nós já conseguimos fazer uma validação melhor. Eu posso até colocar aqui um e-mail para testar.
+
+[09:48] Olha só, ele já entra em todas as nossas regras. Agora com uma senha correta, mas essa senha não é a mesma da confirmação, então ele não vai passar. Vou até tentar colocar a mesma aqui, eu acho eu vou errar. Acertei. Olha só, cadastrou.
+
+[10:00] Ele conseguiu fazer isso. Muito provavelmente, aquele e-mail que eu usei mandou para alguém, então, enfim, não vou usar isso da próxima vez, era só para um teste. Novamente, com eu comentei, tente usar e-mails fictícios, para não ter esses problemas de mandar spam para alguém e assim por diante.
+
+[10:16] Era isso o que eu queria mostrar para vocês, essa validação de campo a campo, para que além de entregarmos a validação que é feita no repository, também tenhamos essa validação da parte visual. Até mais.
+
+@@05
+Sobre os cuidados ao cadastrar um usuário
+
+Durante a aula aprendemos a lidar com as possíveis exceções e erros comuns no fluxo de cadastro de usuário. Considerando o que foi visto, marque as alternativas corretas:
+
+Utilizar o LiveData<Boolean> é o suficiente para implementar o fluxo de cadastro que identifica o sucesso e possíveis falhas.
+ 
+Alternativa correta
+O listener de falha da Task de criação de usuário fornece uma Exception que identifica todos os possíveis problemas ao criar usuários.
+ 
+Alternativa correta
+Utilizamos o Resource para permitir uma resposta personalizada nos possíveis problemas de cadastro de usuário.
+ 
+Alternativa correta! Isso mesmo! Ao usar o Resource, além de enviar valores como Boolean, podemos também enviar informações a mais, como por exemplo, uma mensagem de erro.
+Alternativa correta
+Ao tentarmos criar um usuário, precisamos lidar com 3 tipos de Exceptions comuns.
+
+@@06
+Faça como eu fiz
+
+Mensagens personalizadas com o Resource
+Modifique a classe Resource para receber uma property erro do tipo String? com o valor padrão null.
+
+Então, ao invés do Boolean, utilize o Resource<Boolean> como valor do LiveData. No momento que tiver sucesso, devolva apenas o true, na falha, devolva false e um erro personalizado.
+
+Modifique os demais locais do código para que lidem com LiveData<Resource<Boolean>.
+
+No Fragment de cadastro, adapte a observação do LiveData para apresentar a mensagem de sucesso se o dado do Resource for true e a mensagem personalizada caso for false.
+
+Teste o App e confira se apresenta o comportamento esperado.
+
+Identificando exceptions de cadastro
+Identifique as possíveis Exceptions lançadas ao criar um usuário com e-mail e senha.
+
+Para cada Exception, devolva uma mensagem de erro específica para identificar o problema ocorrido, considerando que as exception são:
+
+FirebaseAuthWeakPasswordException
+FirebaseAuthInvalidCredentialsException
+FirebaseAuthUserCollisionException
+Também adicione uma mensagem padrão ao identificar uma exception diferente dessas.
+
+Após implementar o código, teste o App e simule os problemas, então, confira se apresenta as mensagens esperadas.
+
+Evitando problema de campos vazios
+Evite o crash do App ao enviar os campos vazios para o Firebase Authentication. Para isso, faça o seguinte:
+
+Envolva o método de cadastro com o try catch capturando a IllegalArgumentException;
+Ao capturar a exception, atribua um Resource com dado false para o LiveData e indique a mensagem de falha pelos campos vazios.
+Em seguida, teste o App e confira se ao tentar cadastrar com os campos vazios apresenta a mensagem indicando o problema sem quebrar o App.
+
+Após o teste, também adicione validações para cada campo. Para isso, faça o seguinte no listener do botão cadastrar:
+
+Limpe o erro de todos os campos;
+Verifique se o valor de cada campo é vazio, se sim, apresente a mensagem de erro indicando a obrigatoriedade do campo e atribua false ao marcador de validação (variável valido);
+Chame o cadastro do ViewModel apenas se o marcador for true.
+Após implementar, teste o App e confira se apresenta os comportamentos esperados ao tentar cadastrar usuários sem informação de e-mail ou senha.
+
+Em caso de sucesso deve funcionar como antes, no caso de falha, deve apresentar a mensagem vinda do repositório.
+As exceptions são lançadas nas seguintes simulações:
+
+FirebaseAuthWeakPasswordException -> Quando a senha é fraca, atualmente com menos de 6 dígitos.
+FirebaseAuthInvalidCredentialsException -> Quando o e-mail é inválido
+FirebaseAuthUserCollisionException -> Quando o e-mail já é cadastrado
+Ao tentar cadastrar sem informação de e-mail ou senha, cada campo deve apresentar a mensagem de erro em cada campo e impedir o envio para o ViewModel.
+
+Ao preencher as informações nos campos, o erro do campo deve desaparecer e enviar as informações para o ViewModel.
+
+Você pode conferir as mudanças de código a partir destes commits:
+
+Mensagens personalizadas com o Resource
+Identificando exceptions de cadastro
+Evitando problema de campos vazios
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/c34ec9609c2c5666ffff6afdf0828c0016d7e13d
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/bde1672b59480e22b63f8d915a05e262b9a43b9e
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/9cb997a6effa0787c66d1b1eca40e441b76d3643
+
+@@07
+O que aprendemos?
+
+Nesta aula aprendemos:
+Identificar possíveis problemas ao usar um método do Firebase Authentication
+Como devolver identificação de sucesso
+Apresentar mensagens de erro específicas para cada problema
+Implementar validações para cada campo antes de enviar as informações para o Firebase Authentication
