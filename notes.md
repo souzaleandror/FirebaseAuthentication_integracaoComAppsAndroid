@@ -1066,3 +1066,311 @@ Identificar possíveis problemas ao usar um método do Firebase Authentication
 Como devolver identificação de sucesso
 Apresentar mensagens de erro específicas para cada problema
 Implementar validações para cada campo antes de enviar as informações para o Firebase Authentication
+
+
+#### 19/10/2023
+
+@04-Autenticando usuário
+
+@@01
+Projeto da aula anterior
+
+Caso você precise do projeto com todas as alterações realizadas na aula passada, você pode baixá-lo por meio deste link.
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/archive/aula-3.zip
+
+@@02
+Refatorando o código do fluxo de cadastro
+
+[00:00] Agora que finalizamos a integração da tela de cadastro com o Firebase Authentication, podemos começar com a mesma implementação que fizemos, aqui na tela de login. Porém, antes mesmo de fazermos isso, é muito importante avaliarmos o código que nós escrevemos e aplicar as devidas refatorações para evitar complexidades futuras no momento em que lermos o nosso código, ou até mesmo vermos maneiras de reutilização.
+[00:24] Então vamos começar com a refatoração. Uma das coisas que podemos fazer e iniciarmos a refatoração é avaliar esse código que temos do botão de cadastro, o cadastro_usuario_botao_cadastrar. Quando clicamos neste botão, é onde as coisas começam a ficar um pouco mais complexas, como é o caso dessa limpeza dos campos. Nós precisamos entender que estamos fazendo a limpeza de todos os campos aqui.
+
+[00:45] Então podemos simplesmente extrair para um método, que será chamado de "limpaTodosCampos". Podemos fazer isso, se você preferir, também pode chamar de "limpaCampos", se isso for suficiente, mas é bom colocar todos os campos, porque sabemos que está limpando tudo, então fica muito mais claro para nós.
+
+[01:01] Essa parte de pegar os valores, ela já está extraída o suficiente, porque ela já está pegando os valores e reutilizando em outros pontos. Então eu vou deixar dessa maneira. Você pode extrair para outro método, que ele pega o text input layout e extrai para você, faz tudo bonito, sem você fazer todas essas chamadas em mais de um ponto, porque aqui meio que replica o código.
+
+[01:23] Fica a seu critério, eu vou deixar dessa forma. A seguir, temos esse comportamento de validação, que começa desde essa variável valido até essa parte do último if, que verifica se a senha, ela é diferente do confirma senha. Também isso pode ser um método, que será chamado de "validaCampos". Aqui sim, olha como fica.
+
+[01:44] Basicamente teremos todos os valores dos campos e vamos devolver um boolean, se var valido for verdade, fazemos o cadastro. Se não for, não fazemos. Então podemos colocar até mesmo como val valido quando pegamos esse valor de dentro desse método. Ele está fazendo todo esse código que vemos e não precisamos trabalhar mais com var, podemos trabalhar diretamente com val quando pegamos o retorno, o que é mais interessante.
+
+[02:09] Quando ele é válido, basicamente nós chamamos o cadastro do viewModel, que também podemos fazer da seguinte maneira: podemos pegar esse viewModel.cadastra e podemos extrair para um método do próprio fragment, chamado de "cadastra". Esse cadastra, ele recebe as informações que vão para o view model e assim por diante, tudo o que o view model precisar.
+
+[02:30] Uma observação é que estamos mandando essa view no cadastra, mas essa view também, ela pode ser adquirida a partir da property do próprio fragment, então podemos pegar essa view do próprio fragment, que ele também tem disponível. A única coisa que temos que fazer é garantir que a view, ela não seja nula. Se viermos aqui, a view que vem do fragment, ela acaba sendo nula.
+
+[02:49] Então podemos chegar no if(recurso.dado) e simplesmente colocar se se a view não for nula, queremos fazer a chamada view?.let{}, do snackbar. Então podemos mandar dessa maneira, colocando o Snackbar.make para dentro do .let e colocando o it,, então conseguimos fazer essa chamada sem nenhum problema. Ele está perguntando para deixar explícito, porque existe mais de um let.
+
+[03:10] Faz sentido, podemos deixar aqui como view?.Let {view = View>, view, no lugar do it,, e coloca aqui para nós. É uma maneira de fazer isso, por mais que isso não esteja também um pouco ambíguo, é uma maneira de ser feito. No else podemos fazer da mesma forma, então pegarmos aqui, a view?.Let { view: View - >} e aqui dentro colocamos o nosso Snackbar.make.
+
+[03:35] Então é uma maneira para não ficar mandando a view por parâmetro, não faz muito sentido no momento de cadastrar mandar a view, não podemos ter tanto vínculo assim com essa parte da view. Então é uma das maneiras que podemos fazer aqui para solucionar este problema. Não é nenhum problema esse código.
+
+[03:52] Um outro ponto que podemos considerar aqui no cadastra também, é o seguinte: veja que estamos trabalhando direto com string, string, string, string. Isso representa o modelo para nós, representa o nosso usuário. Ou seja, já é o momento para criarmos esse modelo.
+
+[04:06] Então eu vou criar um modelo aqui, que será uma classe Kotlin, que eu vou chamar de "Usuario". Nesse modelo, basicamente eu vou receber aqui um class Usuario(val email: String, val senha: String). Esse é o nosso usuário, é o usuário que vamos usar como base para poder trafegar as informações ou até mesmo colocar informações nossas.
+
+[04:28] Então no private fun cadastra, invés de receber um e-mail e senha, eu vou receber, na verdade, um (usuario: Usuario), é isso que eu vou fazer. Aqui, no momento ante de cadastrar, no if(valido), nós criamos um usuário antes de cadastrar, então será cadastra(Usuario(email, senha)), e vamos criar aqui, que vai mandar o e-mail e a senha.
+
+[04:47] Dado que temos acesso ao Usuario, que tem e-mail e senha, podemos pegar tanto o e-mail desse usuário como também a senha, viewModel.cadastra(usuario.email, usuario.senha). Ou até mesmo podemos fazer o que? Com que o viewModel.cadastra(usuario) agora também trabalhe com esse (usuario), de tal forma que agora também teremos no fun cadastra um (usuario: Usuario).
+
+[05:08] Também vamos mandar esse Usuario para o nosso repositório, ele é quem vai lidar com esse usuário para pegar as informações que ele precisa. Então no FirebaseAuthRepository, dentro de fun cadastra, recebemos também esse (usuario: Usuario), e aqui dentro nós pegamos as informações que precisamos desse usuário, que seria o e-mail e também a senha.
+
+[05:26] firebaseAuth.createUserWithEmailAndPassword(usuario.email, usuario.senha). Essa é uma maneira de refatorarmos o nosso código e colocar mais valor naquilo que nós fizemos, estamos trabalhando agora com usuário ao invés de valores de string, isso considerando as práticas que nós temos da orientação a objetos.
+
+[05:40] Continuando no CadastroUsuarioFragment, a última coisa que eu farei aqui é o seguinte: eu vou reaproveitar esse código do snackbar. Eu vou fazer com que esse código, do Snackbar.make, ele seja utilizado de uma maneira mais simples, até mesmo levando como inspiração o que vemos no KTX, que existem as extensions para facilitar algumas chamadas. Ou seja, eu vou criar uma extensions desse nosso snackbar.
+
+[06:02] Então aqui, no menu lateral esquerdo, nas "extensions", eu vou criar agora uma nova extension, que ela será de views, porque essa view do Snackbar.make, é justamente quem está chamando o Snackbar, e ele precisa da view. Então e vou criar uma extensão para a view.
+
+[06:15] Eu vou chamar de "ViewExtensions". Dentro desse ViewExtensions, eu vou criar uma função, que ela vai, a partir de uma referência de view, eu vou chamar o nosso snackbar, então fun View.snackBar(){}, importando aqui a view. Dentro desse .snackBar(){}, pessoal, praticamente eu vou colocar esse código que fizemos no outro snackbar, para reutilizarmos esse código.
+
+[06:38] Então deixa eu só voltar com essa mensagem lá para não perder, "Cadastro realizado com sucesso". E dentro do View.snackBar, eu vou usar o view: this como referência da view. Eu vou usar a mensagem, que vamos receber via parâmetro fun View.snackBar(mensagem: String), que lá será um argumento.
+
+[06:51] E esse caso da duração, eu vou permitir que seja editável, só que essa edição já terá um valor padrão, não será necessário mandar a duração, porque já vamos considerar aquele valor padrão. Então (mensagem: String, duracao: Int = SnackBar.LENGTH_SHORT), deixamos como Int, colocando o valor padrão. Eu coloquei mais algum atalho que ele entrou no código fonte, não era necessário, já sai.
+
+[07:13] Agora sim, só mandamos a mensagem, que é o que estamos recebendo e a duracao, simples assim. Dessa forma - vou até pular aqui as linhas. Dessa forma nós conseguimos reutilizar esse código do snackbar mandando apenas a mensagem, o que deixa mais simples.
+
+[07:29] Então olhe como é que vai ficar agora o CadastraUsuarioFragment, no if(recurso.dado), agora que temos o view.snackBar(), nós só precisamos mandar a mensagem, só isso: (mensagem: "Cadastro realizado com sucesso"), que ele já faz tudo para nós, fica bem mais simples, até mesmo se formos utilizar isso na nossa tela de login.
+
+[07:47] Então no val mensagemErro, vai ser a mesma coisa, pegando a mensagem de erro. Vamos tirar toda essa parte do SnackBar e vamos pegar view.snackBar(mensagem: mensagemErro), mandando a mensagem de erro. Simples assim. É uma maneira que temos para fazer o nosso código.
+
+[08:01] Deixa eu ver se tem mais alguma coisa que ele fala que podemos fazer. Podemos até mesmo remover o nosso view?.Let, que ele está falando, e fica dessa forma: view?.snackBar(mensagemErro) ^let, nós só garantimos que a view não é nula e simplesmente chamamos o .snackBar. Ficou muito mais simples, bem mais simples. É uma maneira que podemos fazer como solução para o nosso código.
+
+[08:19] Para finalizar, agora que fizemos todas as mudanças, precisamos mexer no FirebaseAuthRepository. Uma observação quando você faz refatoração, principalmente quando você está no começo, não tem tanta segurança do que você está fazendo, é testar cada código que você muda, para ver se os comportamentos também não mudaram.
+
+[08:36] Já que eu já fiz muitas refatorações, e só fiz algumas modificações de extração, eu sei que o código está funcionando, não é um problema, então é por isso que eu não estou testando excessivamente. Mas, depois que eu terminar aqui, eu vou testar para garantir.
+
+[08:49] Aqui, no repositório, basicamente o que podemos fazer é extrair esse método val mensagemErro para pegar o erro que vem do cadastro. Basicamente fazemos esse método de pega ou devolve, o que você preferir. "devolveErroDeCadastro", dessa maneira, devolvemos o erro do cadastro com base no que esperamos quando acontece uma falha. Então nós esperamos que isso seja uma das possibilidades de um erro de cadastro.
+
+[09:15] Podemos já até retornar de cara, ele chama esse inline function que podemos fazer, até mesmo devolver como uma expressão, é uma outra maneira. Tem várias maneiras de fazer essa implementação, fique à vontade para escolher o critério que você definir, não precisa ficar vinculado ao meu. A única coisa importante é refatorar o código, de tal maneira que seja mais fácil de compreender.
+
+[09:36] Então aqui é mais fácil de entendermos que, além do log, nós estamos pegando uma mensagem de erro a partir da chamada do devolveErroDeCadastro, e sabemos que isso é um erro de cadastro, não vamos reutilizar isso quando formos fazer uma autenticação ou alguma coisa do gênero.
+
+[09:50] Então isso também é muito importante no momento em que você extrai o código, é a leitura, a reutilização e assim por diante, todas as técnicas que vimos no decorrer de todos os cursos de Android. Então fizemos a extração aqui, na parte do view model também não tem nada. Também no nosso fragment está tudo correto.
+
+[10:09] Se você preferir, você pode também modificar o código da validação, eu vou deixar dessa maneira, porque é a maneira, entre aspas, mais simples, que eu fiz aqui. E agora, o que falta fazer é só mesmo extrair esse botão, o cadastro_usuario_botão_cadastrar.setOnClickListener, falar que ele é o "configuraBotaoCadastro".
+
+[10:26] Fica claro que quando chegamos nesse código, que estamos fazendo a configuração do botão de cadastro. Agora limpa todos os campos, pega cada um dos valores, verifica se está válido, se está válido, cadastra o usuário. Ótimo, fizemos aqui tudo bonito.
+
+[10:40] Só vamos fazer aquela última execução, para garantir os comportamentos que já fizemos, para ver se tudo funciona da mesma maneira, isso com o código refatorado. Na nossa aplicação, eu vou tentar mandar aqui.
+
+[10:50] Olha só, mandei sem nada, ele já fez as validações iniciais. Então agora com "teste", "teste" - a senha é diferente, ele já identificou aqui. Nessa situação em que a senha é igual “O e-mail é invalido”.
+
+[11:01] Podemos colocar um "teste@aluraesporte.com", com a senha que é inválida. Ele está falando que “Senha precisa de pelo menos 6 dígitos”. Então beleza, agora ele identificou que a senha é diferente. Agora ele tentou, o “E-mail já cadastrado”.
+
+[11:13] Então ele já fez toda a validação para nós. Eu vou colocar agora o outro "testeteste@aluraesporte.com", já que a minha imaginação é muito boa, e o “Cadastro realizado com sucesso”. Então veja que fizemos a refatoração, o nosso código funciona, e estamos preparados o suficiente para começarmos a implantação na nossa tela de login.
+
+@@03
+Integrando verificação do usuário com Firebase
+
+[00:00] Agora que finalizamos a integração do Firebase Authentication com a nossa tela de cadastro, o nosso próximo passo é realizar essa mesma integração na nossa tela de login. Porém, antes mesmo de mexer na tela de login, é muito importante entendermos como funciona o fluxo atual do nosso aplicativo, para fazer esse mecanismo de autenticação.
+[00:22] Por que eu digo isso? Porque hoje já existe uma certa lógica nesse botão "Logar", que é a seguinte: vou clicar em "Logar" e ele já vai entrar nessa tela de lista de produtos, que, a princípio, parece uma coisa besta, parece uma coisa que só direciona, que não nenhuma lógica. Mas, se vermos aqui, ao sair do aplicativo e entrar novamente, vamos perceber que ele entra diretamente na lista de produtos.
+
+[00:45] Quando clicamos no botão de deslogar, de logout, e saímos do aplicativo e entramos de novo, ele mantém na tela de login.
+
+[00:54] Então hoje existe uma regra, que nós criamos, justamente para manter esse fluxo funcionando, que a partir do mecanismo de autenticação, direcionamos para onde o usuário vai. O que precisamos fazer agora é primeiro identificar como é implementada essa lógica e, a partir do momento que identificamos isso, vamos verificar como podemos usar o Firebase Authentication para integrar esse comportamento.
+
+[01:20] Então vamos investigar esse código, vamos ver como funciona o projeto, para então decidir onde iremos modificar o nosso código. Para isso, uma das coisas que é importante notarmos, é como funciona o fluxo inicial do aplicativo. Por quê?
+
+[01:35] Porque, a princípio, a impressão que dá é que sempre acessamos a tela de login primeiro. Só que, na verdade, a primeira tela do nosso aplicativo, se pegarmos o "navigation > navi_graph", é justamente a lista de produtos.
+
+[01:49] Então, sempre que abrimos o nosso aplicativo, ele vem para essa lista de produtos. É aqui que é feita a verificação se o usuário está logado ou não, se ele não estiver, ele volta para a nossa tela de login. Se verificarmos o nosso ListaProdutosFragment, é aqui que vamos ver que existe essa lógica que eu comentei com vocês.
+
+[02:14] Essa lógica está relacionada a essa referência que vemos aqui, que é o nosso BaseFragment(). Se observamos também, nesse nosso projeto, todas as telas que vem depois da tela de login, elas implementam, ou melhor, elas estendem aqui do nosso BaseFragment. Então a ListaProdutosFragment, ela é um BaseFragment.
+
+[02:36] Temos, por exemplo, a tela de detalhes de produtos, a DetalheProdutosFragment, também será um BaseFragment. Por quê? Porque, dessa forma, conseguimos centralizar a nossa lógica, para ver se o usuário está logado ou não, porque se ele não estiver, independente da tela, que clicou no logout, por exemplo, conseguimos voltar para a nossa tela de login.
+
+[03:00] Por isso que todo mundo compartilha essa solução a partir desse BaseFragment. Perceba que, para conseguirmos modificar o nosso código e manter a compatibilidade de como ele funciona, precisaremos investigar um pouco como funciona esse BaseFragment e entender o que ele faz para que essa lógica seja possível. Então, o que vai acontecer, de uma maneira mais resumida?
+
+[03:26] Basicamente, todas as vezes que abrimos o aplicativo e vamos para essa tela de lista de produtos, nós executamos esse código do BaseFragment. Então chegamos aqui, criamos uma instância do BaseFragment, temos acesso a um loginViewModel, a um controlador, e, dentro do onCreate, do nosso lista de produtos, detalhes dos produtos e assim por diante, nós verificamos se o usuário, ele está logado: verificaSeEstaLogado().
+
+[03:52] Então perceba que a mágica, o core da nossa solução, ela está nessa parte, no verificaSeEstaLogado, que é onde precisamos investigar. Então, se vamos nesse verificaSeEstaLogado, é ele que pega o nosso loginViewModel e chama aquele método, que é o .naoEstaLogado(). Então é aqui que temos que mexer primeiro, antes de fazermos outras integrações.
+
+[04:15] Vamos agora investigar esse código e ver o que podemos fazer, para utilizar o nosso novo repositório, que é o do Firebase Authentication. Veja que hoje ele usa o repositório LoginRepository. Basicamente, o que precisamos fazer é ter acesso ao do Firebase, para vermos essa integração acontecendo.
+
+[04:37] Basicamente, o que eu vou fazer? Eu vou modificar o nosso código do LoginViewModel para que ele tenha acesso ao FirebaseAuthRepository, só para manter a compatibilidade das outras implementações e não quebrar muitas coisas ao mesmo tempo, então private val firebaseAuthRepository: FirebaseAuthRepository) : ViewModel(){.
+
+[04:53] A partir desse momento, que fizemos isso, é muito importante modificarmos o módulo. Por quê? Porque o módulo é onde ele cria o nosso view model. Então eu vou alterar para viewModel<LoginViewModel> {LoginViewModel(get(), get()) }, dessa forma ele já consegue criar um LoginViewModel que tem acesso também ao nosso FirebaseAuthRepository.
+
+[05:10] Aqui no LoginViewModel, só precisamos modificar agora essa lógica, para usar então o nosso FirebaseAuthRepository. Então nós pedimos para ele criar esse novo membro, que seria o fun estaLogado(): Boolean {. Aqui dentro, só vamos reaproveitar a mesma lógica que nós vimos aqui em cima, nesse verificaUsuario.
+
+[05:31] Então podemos simplesmente recortar esse código, podemos até mesmo apagar esse método, dado que vamos utilizar esse estaLogado. No estaLogado, colamos o texto e implementamos a nossa lógica, assim como já exploramos no começo do curso, que basicamente é o seguinte: verificamos se o usuário é diferente de nulo, se isso for verdade, retornamos um true.
+
+[05:50] Se caso for falso, nem precisa ter essa condição de falso, pode ser um return, podemos colocar como return false, é simples assim. Essa solução é bastante simples para verificar se o usuário está logado ou não e passar essa informação a diante.
+
+[06:06] Então, agora que fizemos isso, olha o que vai acontecer: quando o nosso BaseFragment chamar o LoginViewModel e chamar o estaLogado, já vamos utilizar o Firebase Authentication para poder verificar se logamos ou não. Eu vou até usar o "Ctrl + Alt + L" para ele formatar bonito aqui as properties.
+
+[06:27] Agora vamos testar o nosso aplicativo e ver o que acontece. Então vamos executar o aplicativo, deixa eu colocar o emulador na tela. Agora nós precisamos ver qual é o comportamento do nosso código assim que ele entra dentro da nossa tela.
+
+[06:42] Veja agora, o que aconteceu? Basicamente, ele voltou para a tela de login. Se clicarmos no "Logar", ele vai para a lista de produtos e ele volta para a tela de login. Por que isso acontece? É justamente pelo fato de que o nosso usuário, ele não está autenticado. O que podemos fazer para testar esse comportamento, que é justamente colocar um usuário que foi autenticado a partir dos mecanismos que vimos aqui?
+
+[07:11] Podemos fazer um teste bem grosso aqui, que seria a partir da nossa MainActivity. Então na nossa MainActivity, que já fizemos os testes, tem até os imports aqui, podemos fazer um sign-in, podemos colocar um sign-in para ver se realmente conseguimos logar e manter esse estado de login.
+
+[07:29] Podemos até pegar aquele código que está ali, no nosso repositório. Então aqui, no FirebaseAuthRepository, onde migramos todo o nosso código, podemos exatamente usar esse sign-in que temos no firebaseAuth.signInWithEmailAndPassword. Vamos voltar na nossa MainActivity e, basicamente eu vou até colocar para nós um log, para ver se deu certo.
+
+[07:49] Vou deixar aqui Log.i(TAG, msg: "onCreate: usuário logado"). Da mesma maneira, eu vou colocar um outro log, um Log.e, para indicar que teve um erro, e vou colocar Log.e(TAG, msg: "onCreate> usuário não logado"), só para termos essa informação no momento em que testarmos esse código.
+
+[08:10] Para poder ter acesso ao nosso firebaseAuth, podemos até mesmo pegar diretamente daqui, então Firebase.auth.SignInWithEmailAndPassword("alex@aluraesporte.com", "teste123"), que ele já importa bem bonito para nós e pronto, agora temos acesso às informações iniciais.
+
+[08:24] Então vamos agora executar o nosso código, vamos ver se ele consegue logar e depois vemos se ele entra diretamente na tela. Então, no log catch, eu vou filtrar por "MainActivity" e o usuário logado.
+
+[08:38] Agora que conseguimos logar, vamos comentar esse código que acabamos de criar e vamos testar o comportamento do nosso aplicativo, para ver se ele se mantém na lista de produtos. Vamos ver se isso acontece.
+
+[08:48] Vamos ver. Ele conseguiu se manter na lista de produtos. Se tentarmos sair do aplicativo e voltar, vamos ver o que vai acontecer. Vamos executar novamente e vamos ver o que vai acontecer agora, que estamos utilizando o Firebase Authentication.
+
+[09:04] Veja só: ele ainda mantém o estado do usuário como logado. Então perceba que a primeira implementação que fizemos, ela já está integrando com o Firebase Authentication. Uma das coisas que podemos fazer agora é também integrar esse comportamento de logout, de delogar. Como podemos fazer isso?
+
+[09:23] Basicamente, podemos modificar aqui também no nosso BaseFragment, no fluxo que ele utiliza, que é a partir do menu, ele vai no view model e desloga, para utilizar também o nosso repositório do Firebase. Então podemos fazer um "Ctrl + B" e, no fun desloga(), podemos usar o nosso firebaseAuthRepository.desloga(), e podemos implementar o .desloga().
+
+[09:47] Então aqui fazemos o .desloga como público, nesse caso. E o que vai acontecer aqui? Basicamente, no FirebaseAuthRespository, no fun desloga(), nós tiramos esse firebaseAuth: FirebaseAuth, porque já recebemos ali via construtor. Só essa chamada é o suficiente para fazer o logout, nós já vimos que isso funciona.
+
+[10:03] Agora sim podemos só novamente verificar se não tem nada para mexer. No LoginViewModel não tem, no BaseFragment também não tem. Agora podemos testar para ver se esse comportamento funciona. Agora vamos testar mais uma vez, para ver o que acontece.
+
+[10:18] Já que ele está logado, ele entra na tela de lista de produtos. Deslogado, ele volta para a tela de login. Vamos executar novamente e vamos ver se ele ainda consegue manter a lista de produtos.
+
+[10:25] Veja que ele não consegue, porque agora sim, o estado de logado e deslogado já está integrado com o Firebase. Só para fazer mais um teste, vamos autenticar mais uma vez, então eu executo aquele código comentado. Ele vai fazer a autenticação. Dado que ele é assíncrono, ele não consegue fazer durante aquela verificação inicial.
+
+[10:44] Então precisamos executar o código mais uma vez, para poder pegar o usuário logado e entrar então no nosso aplicativo.
+
+[10:52] Agora sim nós já conseguimos fazer essa nossa primeira integração. Esse código para fazer o login eu vou deixar comentado - ou melhor, eu vou até remover, porque não faz muito sentido o mantermos. Utilize ele apenas para você fazer o seu teste e ver se está autenticado ou não, se a integração funcionou.
+
+[11:09] Mas depois que fizer isso, remova, tire os imports, remova também a tag se não for utilizar, porque a nossa MainActivity, ela tem que ficar limpa, considerando que ela não vai manter esses códigos.
+
+[11:21] Entenda que agora o primeiro passo de todos, que era justamente essa integração de manter o usuário logado a partir do Firebase Authentication, nós já conseguimos fazer. O nosso próximo passo é mexer diretamente nesta tela de login, para fazer então a integração de fato. Até já.
+
+@@04
+Autenticando com o Firebase Authentication
+
+[00:00] Agora que nosso aplicativo é capaz de identificar se o usuário está logado ou não utilizando o Firebase Authentication, podemos começar com a implementação de autenticação na tela de login, de tal forma que agora vamos utilizar o Firebase Authentication para verificar isso para nós. Então vamos começar entrando na nossa tela de login. O que precisamos fazer?
+[00:22] Hoje, do jeito que está, clicamos no botão "Logar" e ele acessa o LoginViewModel, como vimos anteriormente. Pega as informações, salva no shared preference para verificar se está logado ou não. Precisamos modificar esse comportamento para utilizar o nosso FirebaseAuthRepository. Para isso, nós precisamos das credenciais do nosso usuário, precisamos também enviar o e-mail e senha.
+
+[00:45] Então, antes mesmo de mexer no LoginViewModel, a primeira coisa que precisamos é modificar o comportamento do botão de "Logar", fazer com que ele pegue o e-mail a partir do campo login_email, pegando aquelas mesmas informações, assim como fizemos no cadastro, a partir do .editText, verificar se não é nulo, pegar o .texte o .toString, val email: String = login_email.editText?.text.toString().
+
+[01:05] E também fazer a mesma coisa para a senha, então eu repliquei aqui, mudei o nome da variável e também do campo, val senha: String = login_senha.editText?.text.toString(). Temos aqui as nossas informações. Agora que temos as informações, podemos também mandar o usuário, falar que teremos um usuário, que ele tem um e-mail e senha, viewModel.loga(Usuario(email, senha)).
+
+[01:22] Aqui nós fazemos o import, também modificamos o .loga, para que ele receba esse novo parâmetro. Agora sim temos um fun loga(usuario: Usuario), que ele vai receber um usuário e conseguimos trabalhar com esse usuário, de tal forma que vamos integrar com o Firebase Authentication.
+
+[01:38] Dado que a ação é autenticar, eu vou mudar o nome também aqui da fun loga com o "Shift + F6", eu vou chamar de fun autentica, para ficar mais preciso com o que estamos fazendo. Agora temos que modificar a implementação. Aqui no fun autentica não é mais o repositório de login, é qo firebaseAuthRepository.autentica(usuario), e podemos até mesmo chamar de autentica(usuario), mandando o (usuario).
+
+[02:01] E até mesmo pedir para ele criar esse membro para nós: fun autentica(usuario: Usuario). Agora que temos esse membro no FirebaseAuthRepository, só precisamos usar a lógica que faz isso para nós. Nós até mesmo temos esse código aqui em cima, no private fun autenticaUsuario.
+
+[02:12] Então eu vou recortar esse código, vou até apagar esse método que tínhamos anteriormente, quando fizemos os nossos primeiros testes, que é o autenticaUsuario, que recebe o firebaseAuth, porque agora vamos focar a implementação diretamente no autentica. Aqui, no autentica, o que vamos usar é o firebaseAuth.SignInWithEmailAndPassword() recebendo as informações do usuário.
+
+[02:34] Então (usuario.email, usuario. senha), e na senha será o usuario.senha. Simples assim. Aqui, na implementação, podemos seguir esse padrão, só que, nesse momento, eu vou aproveitar para mostrar uma outra abordagem, que é muito comum, se brincar é a mais comum ainda de ser utilizada para tasks da API do Google, que é a seguinte: veja que hoje nós usamos o addOnSuccessListener e o addOnFailureListener.
+
+[02:59] Aqui também vamos ter o .addOnCompleteListener{}. Qual é a diferença em relação às outras abordagens? É que no complete, nós conseguimos fazer exatamente tudo o que é possível dentro de uma task. Como assim, tudo o que é possível? Aqui conseguimos verificar se a task foi um sucesso, se foi uma falha, se cancelou e assim por diante, sem adicionar mais de um listener.
+
+[03:23] Apenas um único listener é capaz de verificar tudo isso para nós, e ele permite fazer isso a partir desse parâmetro que recebemos via expressão lambda, que é uma task, podemos até mesmo chamar de tarefa, .addOnCompleteListener { tarefa: Task<AuthResult!> ->. Então, com essa task, que temos acessível aqui, conseguimos, por exemplo, verificar se foi um sucesso chamando essa propriedade, que é o .isSuccessful.
+
+[03:44] Nós conseguimos verificar dessa maneira. Se caso não for verdade, porque isso é um boolean, nós identificamos que é uma falha e temos até acesso à nossa exception. Então veja que aqui ela dá acesso a tudo o que precisamos para fazer um fluxo quando é finalizada uma task. Vamos ver como implementamos agora, utilizando aqui o nosso .addOnCompleteListener.
+
+[04:06] Então aqui, basicamente vamos colocar if(tarefa.isSuccessful), para poder identificar que deu certo. Agora que identificamos que deu certo, podemos fazer o procedimento, que fizemos no cadastro, que é justamente devolver o dado que nós precisamos para poder identificar se deu certo ou não, que pode ser um resource de boolean. Por que o resource? Novamente, porque também pode ter algum erro.
+
+[04:30] Então, o que precisamos fazer neste momento? Primeiro é indicar que vamos mandar um LiveData: fun autentica(usuario: Usuario): LiveData<Resource<Boolean>>{, justamente para mandarmos uma mensagem de que deu certo ou não. Aqui dentro vamos ter o MutableLiveData<Resource<Boolean>>.
+
+[04:53] Nós criamos a instância, cria a variável val liveData = MutableLiveData<Resource<Boolean>>(). Quando identificamos que deu certo no if, simplesmente mandamos a mensagem, o valor aqui, liveData.value = Resource(true) de boolean. Essa é a primeira coisa que precisamos fazer.
+
+[05:12] No momento em que o if falha, que foi uma falha porque não foi sucesso, nós podemos mandar também o else, o liveData.value = Resource(false), mas com a mensagem de erro. Nós podemos fazer isso. Então dentro do parênteses é (dado false, erro: "erro na autenticação"), indicando uma mensagem padrão por enquanto, que seria erro na autenticação.
+
+[05:33] Se você preferir, da mesma maneira que fizemos no cadastro, você pode também colocar um Log.e(TAG, msg: "auntentica: "), indicando que teve um problema, que é no autentica. Então msg: "autentica: " não precisamos colocar exatamente aqui uma mensagem, podemos apenas colocar apenas a (TAG, msg: "autentica: ", tarefa.exception), que ela nos mostra o que aconteceu.
+
+[05:53] Então veja que a implementação é muito similar, a única diferença é que estamos usando o .addOnCompleteListener para fazer tanto o sucesso como também a falha. Basicamente é isso, de resto estamos usando o resource, que manda verdade quando dá certo, manda falso quando dá errado, junto da mensagem. Por fim, só falta colocar aqui o retorno do liveData, return liveData. Então a solução é muito similar.
+
+[06:16] Agora temos esse liveData acessível, precisamos modificar no LogInViewModel, para ele retornar também esse LiveData, então fun autentica(usuario: Usuario): LiveData<Resource<Boolean>>. Importando aqui o resource. Retornamos esse liveData a partir do return firebaseAuthRepository.autentica(usuario).
+
+[06:35] Agora aqui no LogInFragment, precisamos também fazer uso desse nosso liveData, a partir do observer, então aqui, viewModel.autentica(usuario(email, senha)).observe(viewLifeCycleOwner, observer{}), como vimos durante o curso. E aqui, já podemos fazer as verificações que nós precisamos.
+
+[06:53] Vou até pular uma linha aqui no .observe para ficar mais fácil de ver. Agora, dentro observer, precisamos verificar se o dado que recebemos, que é o nosso resource, que ele não é nulo, então safe call it?.Let {}. Aqui dentro dos colchetes, conseguimos colocar o que precisamos da nossa lógica. Vou fazer o "Ctrl + Alt + L" para ele formatar.
+
+[07:12] Aqui dentro teremos acesso ao recurso ->. Dentro deste recurso, podemos fazer as devidas verificações. Por exemplo, verificar se ele tem um dado, porque se ele tem um dado, significa que deu certo, e se deu certo, podemos mandar o nosso usuário para a lista de produtos, if(recurso.dado){}, vaiParaListaProdutos().
+
+[07:30] Agora se deu errado, else, precisamos mandar uma mensagem de erro. Essa mensagem de erro, como já vimos, ela pode ser retirada do recurso. Então podemos pegar recurso.erro ?: e verificar se não é nulo. Se isso for nulo, criamos uma mensagem nossa, que pode ser recurso.erro ?: "Erro durante a autenticação".
+
+[07:49] Eu estou fazendo uma mensagem um pouco mais extensa para vermos a diferença entre a mensagem da tela e a mensagem que vem do repositório. Então aqui temos o val mensagemErro: String = recurso.erro ?: "Erro durante a autenticação". E, basicamente, só precisamos pegar a view.snackBar(mensagemErro), mandando a mensagem de erro.
+
+[08:07] A view que eu estou pegando é a que vem do onViewCreated. Agora que temos o nosso código, podemos fazer o teste para ver se essa primeira implementação que nós fizemos, ela funciona. Executando aqui, vamos ver como é que fica.
+
+[08:22] Voltamos para a tela de login. Eu vou primeiro tentar logar com um usuário e senha que aparentemente não vai funcionar. Vamos ver.
+
+[08:31] Olha só “Erro na autenticação”. Foi diferente da mensagem da tela, então a mensagem que vem do repositório já está funcionando como o esperado. Agora, o que precisamos fazer é pegar um usuário, aqui do console, que eles estejam disponíveis para logarmos. Vamos testar para ver o que acontece.
+
+[08:47] Então eu vou pegar esse primeiro usuário, eu só vou ter que lembrar a senha - tirar também esse espaço em branco do e-mail. Agora precisamos testar. Vamos colocar o "teste1" na senha. Vamos ver se eu acerto de primeira.
+
+[08:59] Olha só: erro na autenticação. Para vermos também o problema que aconteceu, podemos vir no log catch e podemos fazer o filtro. Se fizermos o filtro, vamos até pegar qual foi o erro. Já mostra até a exception, já fica até mais fácil.
+
+[09:14] A senha, ela está inválida. Então já está funcionando a autenticação. Já que a senha foi inválida, podemos tentar a senha "teste123", que eu coloque só o 1. Vamos ver se funciona. Funcionou. Então conseguimos fazer a autenticação. Veja que não teve mais nenhum erro.
+
+[09:29] Funcionou numa boa. Se você quiser testar com outro usuário, também pode testar. Faz o logout, aqui no console você vai simplesmente pegar um outro e-mail. Eu vou pegar esse "teste@aluraesporte.com". Vamos colar aqui. Vamos ver se dessa vez eu acerto a senha de primeira. Tirando o espaço em branco no final. Eu vou tentar "teste1". Olha só.
+
+[09:51] Eu consegui acertar de primeira e ele já fica autenticado para nós. É um comportamento que temos que testar, mas que realmente mantém esse estado de autenticado saindo do aplicativo. Eu vou até fechar pelo emulador, para ter certeza de que foi tudo fechado. Eu vou abrir o aplicativo. Vamos ver aqui.
+
+[10:08] Ele consegue manter o nosso usuário. Se você sai, fecha tudo e abre de novo, conseguimos ver que ele mantém agora o estado de não logado, porque ele deslogou.
+
+[10:17] Agora sim conseguimos fazer essa integração do nosso aplicativo, fazendo a autenticação a partir da nossa tela de login e utilizando o Firebase Authentication.
+
+@@05
+Sobre o fluxo de autenticação
+
+Aprendemos a integrar o comportamento de autenticação, verificação e saída do usuário com o Firebase Authentication. Considerando o que foi visto em aula, marque a alternativa correta:
+
+Tanto o cadastro como a tela de login utilizam a mesma estratégia na implementação do fluxo.
+ 
+Alternativa correta! Isso mesmo! A diferença em ambos fica apenas no comportamento e telas chamadas com o sucesso.
+Alternativa correta
+Com a integração do Firebase Authentication o fluxo do App precisa acessar primeiro a tela de login e verificar o usuário.
+ 
+Alternativa correta
+Para a task de autenticação é necessário utilizar o listener que verifica se a task foi completada.
+ 
+Alternativa correta
+Para manter o estado de logado no App, precisamos verificar o usuário no Firebase Authentication e no Shared Preferences também.
+
+@@06
+Faça como eu fiz
+
+Refatorando o código
+Refatore todo o código de implementação da integração do Firebase Authentication com a tela de cadastro. Para isso, considere técnicas como extração de classes, métodos ou funções.
+
+Lembre-se de criar o modelo para representar um usuário.
+Após finalizar a refatoração, teste o App e confira se os comportamentos da funcionalidade de cadastro funcionam como esperado.
+
+Verificando e deslogando o usuário no App
+Verifique se o usuário está logado com o Firebase Authentication. Para isso, faça os seguintes ajustes:
+
+Receba o repositório do Firebase Authentication no LoginViewModel;
+Chame o método de verificar usuário do repositório do Firebase Authentication.
+Lembre-se de modificar o Koin para que ele crie o LoginViewModel com o repositório do Firebase Authentication. Por enquanto, deixe o repositório de login no ViewModel.
+Também integre o comportamento de deslogar chamando o método de deslogar do repositório do Firebase Authentication.
+
+Após aplicar as modificações, teste o App e confira se apresenta os comportamentos esperados.
+
+Autenticando com o Firebase Authentication
+Altere o código da tela de login para fazer a autenticação com o Firebase Authentication. Para isso faça o seguinte:
+
+Receba um usuário no método de autenticação do repositório do Firebase Authentication;
+Implemente o listener com a resposta de sucesso e falha e retorne um LiveData<Resource<Boolean>>;
+Faça o ViewModel de login chamar o método de autenticação do repositório do Firebase Authentication;
+Envie o e-mail e senha da tela de login para o ViewModel e observe o LiveData;
+Se der sucesso vá para a lista de produtos, caso contrário apresente a mensagem de erro via SnackBar.
+Por fim, teste o App e confira se o fluxo de login funciona como esperado.
+
+O App deve apresentar o mesmo comportamento após a refatoração, a diferença é que o código precisa ficar mais simples na leitura e reutilização de código.
+Ao logar, deve entrar na tela inicial (lista de produtos), fechando o App e, ao abrir, deve apresentar a tela inicial ao invés da tela de login. Ao deslogar, deve voltar para a tela de login, ao fechar e abrir o App novamente, deve apresentar a tela de login.
+
+Ao realizar as simulações na tela de login, o App deve acessar a lista de produtos apenas com a resposta de sucesso do Firebase Authentication. Caso contrário, deve apresentar a mensagem de falha na autenticação.
+
+Refatorando o código
+Verificando e deslogando o usuário no App
+Autenticando com o Firebase Authentication
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/c043893b77498d79fdef700ba811000f375f990f
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/3f5d2ce7d320ef64d0e859dfaf9e8785a1527c98
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/460f8cfd7f9a47260fe07b39e72a72c301969846
+
+@@07
+O que aprendemos?
+
+Nesta aula aprendemos:
+Verificar o usuário no Firebase Authentication
+Autenticar o usuário no Firebase Authentication a partir da tela de login
+Realizar o logout a partir do fluxo do App
+Utilizar o listener de tarefa completada
