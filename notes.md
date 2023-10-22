@@ -1374,3 +1374,414 @@ Verificar o usuário no Firebase Authentication
 Autenticar o usuário no Firebase Authentication a partir da tela de login
 Realizar o logout a partir do fluxo do App
 Utilizar o listener de tarefa completada
+
+#### 22/10/2023
+
+@05-Apresentando o usuário logado
+
+@@01
+Projeto da aula anterior
+
+Caso você precise do projeto com todas as alterações realizadas na aula passada, você pode baixá-lo por meio deste link.
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/archive/aula-4.zip
+
+@@02
+Apresentando mensagens de erros no login
+
+[00:00] Agora que integramos a nossa tela de login com o Firebase Authentication, o nosso próximo passo é refinar a nossa solução, de tal forma que consigamos, por exemplo, entregar uma mensagem mais precisa sobre algum possível problema que pode acontecer durante esse processo, como é o caso do .signInWithEmailAndPassword do autentica.
+[00:19] Se avaliarmos aqui a documentação, nós vemos que também existem exceptions que podem ser lançadas e que são esperadas durante essa chamada. É importante verificarmos quando isso acontece para que o nosso usuário, assim como fizemos no cadastro, tenha uma mensagem mais precisa. Então vamos começar.
+
+[00:37] Para isso, vamos fazer uma implementação muito similar ao que fizemos no devolveErroDeCadastro, colocando o when expression, identificando a exception e mandando uma mensagem. Vamos fazer isso logo depois que colocamos o nosso log de erro do autentica.
+
+[00:51] Então aqui embaixo, basicamente o que precisamos fazer é pegar o when(), indicar que vamos verificar a exception que é pega a partir da nossa tarefa, porque estamos usando o .addOnCompleteListener, então when(tarefa.exception){}. Agora precisamos ver cada uma das exceptions.
+
+[01:10] Novamente, você sempre pode consultar a documentação para verificar qual é a exception e ver também o porquê ela é lançada. Como é o caso dessa "FirebasAuthInvalidUserException". Perceba que ela é lançada quando uma conta tem um e-mail que não existe ou ele está desabilitado, então precisamos colocar uma mensagem que direcione esse comportamento.
+
+[01:32] Para isso, vamos deixar is FirebaseAuthInvalidUserException ->, agora precisamos mandar uma mensagem. Eu vou estender o código aqui para ficar mais fácil de visualizar: "Ctrl + Shift + F12". Agora vamos colocar a mensagem que é correspondente a esse problema. Basicamente é: -> "E-mail inválido ou desabilitado". Podemos colocar assim. Se você preferir também pode colocar inexistente, fica a seu critério colocar a mensagem que preferir.
+
+[02:04] Então, nessa mensagem, se você preferir trocar por inexistente também você pode colocar. Eu vou deixar dessa forma só porque também, entre aspas, é equivalente. Eu vou agora verificar a próxima exception, que é justamente o "FirebaseAuthInvalidCredentialsException". Nós já vimos essa exception no cadastro, que era quando informava o e-mail em um formato que não era o esperado.
+
+[02:26] Aqui ele está falando que ele lança quando a senha, ela está errada. Então vamos manter essa mensagem e vamos ver o que acontece durante o teste. Então is FirebaseAuthInvalidCredentialsException ->, só para garantir que é esse mesmo, para não errar, InvalidCredentialsException, perfeito.
+
+[02:47] Então aqui, como a documentação nos diz, precisamos manter a senha incorreta, vamos deixar assim, -> "Senha incorreta", inválida, da maneira que você preferir, a ideia é basicamente essa. Por fim, considerando toda a nossa implementação de antes, precisamos também de uma mensagem padrão quando não conseguimos identificar o erro, dado que ele não bateu aqui dentro das exceptions.
+
+[03:09] Seria o else, indicando que é um erro desconhecido, else -> "Erro desconhecido". Por fim, precisamos pegar essa mensagem para enviar dentro do resource de falha, que justamente esse liveData.value = Resource(dado: false,. Então val mensagemErro: String = when(tarefa.exception).
+
+[03:29] Aqui temos sempre que deixar uma string. Por quê? Porque senão vamos permitir que o nosso when devolva outros valores. Dessa forma, só precisamos mandar a mensagem de erro que agora, dentro do nosso mecanismo de autenticação, que é tela de login, ele vai conseguir captar cada uma dessas mensagens e vai nos mostrar qual foi o problema que aconteceu.
+
+[03:53] Então vamos executar o nosso aplicativo. Agora que ele vai executar, ele vai pegar exatamente essas mudanças e poderemos simular. Vamos colocar primeiro informações da mesma forma como fizemos no cadastro, é o "teste", "teste". Eu vou minimizar o teclado, e vamos ver o que acontece.
+
+[04:10] Ele colocou senha incorreta. Tudo bem, a senha realmente não está certa, mas percebe que ele colocou uma senha incorreta em um usuário que necessariamente, ele nem existe mesmo, ele não é um e-mail, por isso não faz muito sentido essa mensagem de senha incorreta dessa forma.
+
+[04:28] Então o primeiro ponto que temos que observar é justamente avaliar o que aconteceu no log catch. Para isso, vou selecionar a nossa aplicação, deixa eu ver aqui, beleza. Ele não mostrou o log. Eu vou executar novamente, só para ver se ele mostra o log dessa vez.
+
+[04:43] Agora ele está nos mostrando o log. Eu vou limpar, colocar agora as nossas credenciais no aplicativo, as mesmas de antes, e vamos ver o que acontece. Olha só, ele mostrou agora a exception.
+
+[04:54] Perceba que ele veio justamente naquela FirebaseAuthinvalidCredentialsException, que é aquela nossa exceção para indicar que a senha está incorreta. Só que, na verdade, nesse caso específico, ele indica que o e-mail está mal informado, que é exatamente o que fizemos na nossa tela de cadastro.
+
+[05:12] Então perceba que colocar apenas a mensagem de senha incorreta, não é o suficiente para avisar para o nosso usuário que o problema está necessariamente na senha. Nesse caso, o problema é que o nosso e-mail ou senha, eles realmente não estão corretos. Então o que é mais preciso, nesse caso, por mais que aqui seja um problema no e-mail, é justamente indicar que as credenciais, que seriam e-mail e senha, estão incorretas.
+
+[05:38] Então essa mensagem mais precisa, que podemos deixar para o nosso usuário, como também protegemos até mais o nosso mecanismo de autenticação para que um usuário mais malicioso não tenha uma informação precisa, se o problema foi o no e-mail ou se o problema foi na senha. Então vamos colocar essa informação is FirebaseAuthInvalidCredentialsException - > "E-mail e senha incorretos".
+
+[06:01] Vamos deixar dessa forma, que por mais que as credenciais estejam com problema, vamos indicar para o nosso usuário que ele precisa verificar as duas informações. De volta à aplicação, colocamos "teste", "teste", botão "logar".
+
+[06:15] Agora sim, “E-mail e senha incorretos”. Isso nesse caso em que identificamos essa exceção e que temos realmente um e-mail que foi mal informado. Esse é o primeiro ponto. Qual seria o próximo teste? O próximo teste que podemos tentar alcançar é justamente isso, de indicar que o usuário, ele é inválido ou desabilitado. Esse seria um próximo teste que poderíamos praticar.
+
+[06:39] Seria basicamente isso: eu vou supor que eu não coloquei esse e-mail, que seria "teste.suporte", só para poder colocar alguma coisa aqui que simule, "@aluraesporte.com". Eu imagino que eu não coloquei esse e-mail. No caso, eu vou colocar uma senha que aparentemente é válida, considerando todas as regras do Firebase Authentication, que precisa de 6 dígitos atualmente. Eu vou colocar agora para logar.
+
+[07:06] Ele está falando aquela mensagem que nós configuramos aqui, que é justamente “E-mail inválido ou desabilitado”. Se viermos aqui embaixo, no log catch, ele está falando que não tem nenhum usuário gravado com essa identificação que colocamos.
+
+[07:22] Então tem até mais mensagem falando que ele também pode ter sido deletado e assim por diante. Essa parte também, ela foi identificada. Perceba que quando não temos aqui o usuário, o Firebase, ele identifica esse problema e nos passa. Como também é o caso de um e-mail que existe, então podemos colocar um e-mail que existe.
+
+[07:42] No caso essa autenticação aconteceu, não era previsto que eu acertasse a senha. Deixa eu voltar para a tela de login. "teste@aluraesporte.com", agora vou colocar uma senha que realmente ela vai falhar, que é o "teste123". Vamos ver o que acontece nesse caso.
+
+[07:57] "E-mail e senha incorretos". Nesse caso não é nem um E, é ou. Deixa eu colocar na mensagem, porque pode ser um ou pode ser outro, deixe o usuário avaliar conforme o que ele colocou de informação. Deixa só eu colocar o ou na mensagem para ter certeza aqui. Agora, no emulador, "teste@aluraesporte.com", vou colocar uma senha inválida, que é a "teste123".
+
+[08:18] “E-mail ou senha incorretos”. Ele já nos mostra, aqui no log catch que a senha, ela é inválida.
+
+[08:23] Como eu comentei, não é tão interessante colocarmos que é a senha ou o e-mail que estão errados justamente para evitar os usuários maliciosos de ficarem tentando autenticar em algum e-mail que não é deles, ou eles saberem: a senha que está errada, vamos tentar autenticar nesse e-mail, e assim por diante. Ou esse e-mail nem existe, então vamos criar e assim por diante.
+
+[08:46] É muito importante tentarmos evitar qualquer tipo de informação a mais desnecessariamente. Nesse caso, e-mail ou senha inválidos não é um problema para o nosso usuário, ele vai ter que checar as duas informações. O outro ponto, que é muito importante notar, é que estamos falando para o nosso usuário que existe um usuário que está inválido ou desabilitado.
+
+[09:08] Estamos falando também dessa informação. Aqui também cabe um ponto de reflexão, que é justamente você sozinho pensar na sua regra de negócios, se essa é uma informação importante para o seu usuário. Por quê? Porque, novamente, aqui você está indicando para um usuário mais malicioso que esse e-mail talvez não exista ou que foi desabilitado. Você está dando mais informações que não precisa dar.
+
+[09:30] Então aqui você pode também pensar: poxa, essa informação não é tão interessante para o meu usuário, mas sim, é bom identificar que aconteceu isso para que eu consiga direcionar uma mensagem. Uma das coisas que você poderia fazer é justamente sempre manter essa mensagem unificada para um dos dois problemas.
+
+[09:46] Se for o FirebaseAuthInvalidUserException, você vai manter essa mensagem do e-mail ou senha incorretos; se for a FirebaseAuthInvalidCredentialsException, você também vai manter essa mesma mensagem. O importante é você identificar que foi um dos dois problemas para falar que o problema é no e-mail ou na senha.
+
+[10:03] Essa é uma prática que você pode considerar, que vai evitar passar informações muito precisas para o usuário. No momento em que isso não acontecer, ele vai falar que aconteceu um erro desconhecido e vai nos passar isso. Então é uma das maneiras que podemos fazer, que é o que eu faço aqui durante o curso. Mas, novamente, fica a seu critério manter a mensagem que você preferir.
+
+[10:24] Aqui, basicamente eu vou recortar esse isFirebaseInvalidUserException, colocar aqui embaixo, junto com o is FirebaseAuthInvalidCredentialsException, e vou tirar aquela mensagem mais específica, que identifica que o usuário não existe ou ele está desabilitado. Eu vou deixar essas duas exceptions em uma única mensagem.
+
+[10:41] Então vamos agora só executar, vamos testar e ver o que acontece agora, que fizemos essa modificação. Na aplicação, colocando "teste" e "teste". Vamos lá.
+
+[10:53] “E-mail ou senha incorretos”. Ele conseguiu colocar a mensagem para nós. Agora, se colocarmos um e-mail que existe, que era o que estávamos testando, e coloca uma senha para ele que é inválida.
+
+[11:05] “E-mail ou senha incorretos”. Se colocarmos um e-mail que seria aquele suporte, vimos que dava aquela mensagem mais específica, e senha incorreta.
+
+[11:15] Também “E-mail ou senha incorretos”. Nós podemos sempre ver as exceptions para ver se elas estão batendo conforme o que esperamos. Veja que as simulações estão bem precisas com o que fizemos anteriormente. Vamos colocar uma senha correta, só para garantir, ou até mesmo podemos colocar um e-mail válido novamente e testar.
+
+[11:33] Vamos ver que é “E-mail e senha incorretos”, então está funcionando. Só para garantir que isso não afetou o nosso comportamento principal, vemos que conseguimos autenticar.
+
+[11:42] Então perceba que agora sim, o nosso código, ele já é capaz de identificar uma mensagem mais precisa, assim como fizemos no cadastro, agora a nossa tela de login, ela consegue esse feedback para o nosso usuário em situações excepcionais.
+
+@@03
+Refatorando a tela de login
+
+[00:00] Por mais que tenhamos adicionado essa mensagem específica durante o momento da autenticação, existem situações aqui que nós não validamos dentro da nossa tela de login, assim como fizemos na tela de cadastro, que é justamente mandar uma autenticação com e-mail ou senha vazios. Então se vermos essa informação, olha só, temos exatamente aquele mesmo problema do illegal argument exception.
+[00:25] Então aqui temos que praticar exatamente a mesma coisa que fizemos no cadastro como, por exemplo, o primeiro passo de todos é colocar todo esse código que fizemos na aula passada dentro de um * try catch*. Basicamente podemos pegar todo esse nosso código, usar o "Ctrl + Alt + T", envolver dentro de um "try/catch".
+
+[00:46] E no catch(){} indicar, dentro do parênteses, que terá um (e: IllegalArgumentException). Dentro do catch podemos chamar o nosso liveData, de tal forma que mandamos uma mensagem mais específica. Então colocamos aqui liveData.value = Resource(dado: false, erro: ""). Dizemos que aconteceu um problema, que seria justamente "E-mail ou senha não pode ser vazio".
+
+[01:07] Temos que colocar uma mensagem como essa. Vamos ver agora o que acontece quando temos essa situação, justamente para evitar aquele comportamento. Então vamos na aplicação.
+
+[01:17] “E-mail ou senha não pode ser vazio”. Então essa é a primeira coisa que precisamos fazer para evitar que o nosso aplicativo, ele quebre. Mas, novamente, também pegando a mesma ideia do que fizemos no cadastro, precisamos também dessas validações de cada campo para então realmente entregar uma experiência que seja mais interessante para o nosso usuário.
+
+[01:35] Até mesmo se ele só coloca o e-mail, por exemplo, ele vai ter essa mensagem que e-mail ou senha não podem ser vazios, sendo que é só a senha que está faltando. Então essa validação é importante, vamos colocar agora e também já vamos aproveitar e refatorar o nosso código. Então vamos começar.
+
+[01:52] Para isso, vamos no LoginFragment e antes de pegarmos essas informações e mandar para a autenticação do Firebase Authentication, precisamos fazer as devidas validações. Então as validações nós já sabemos como são, basicamente é verificar se está em branco, que é o isBlank. Aqui, no if(email.isBlank()){}, mandamos o erro específico para o campo que identificamos.
+
+[02:12] Nesse caso, é o login_email.error =e eu estou colocando a informação = "E-mail é obrigatório". Fica a seu critério, a mensagem que você preferir. Em seguida, o que precisamos fazer? Precisamos colocar aquele campo para indicar se é válido ou não, já aproveitando a mesma ideia que fizemos anteriormente, que seria var valido = true, ele começa como true.
+
+[02:36] Quando identificamos o problema, deixamos como valido = false. É isso o que precisamos fazer. Em seguida, colocamos para o outro campo, que seria o de senha: if(senha.isBlank()){}. Aqui dentro, vamos lá login_senha.error = e vamos indicar a mesma mensagem, só que para a senha, então = "Senha é obrigatória". E, por fim colocamos o valido = false, indicando que ele será false.
+
+[03:01] Depois que fazemos toda essa validação em cada um dos campos, só precisamos colocar o nosso if(valido){}, para que ele consiga chamar o autentica. Então deixa eu só minimizar esse código do .observe, e colocar dentro do if, só para já fazermos essa parte da validação.
+
+[03:20] Como vimos também, para poder mostrar o erro e depois tirar o erro da tela, precisamos limpar o campo, ou melhor, os campos, cada vez que clicarmos no botão de "Logar". No caso do login.email, vamos deixar login.email.error = null. No caso do login_senha, vamos deixar como login_senha.error = null também, porque isso vai limpar o campo cada vez que fizermos essa tarefa.
+
+[03:47] Então vamos agora testar para ver o que acontece, dado que a estamos fazendo a validação que fizemos lá no cadastro, da mesma maneira. Vamos para a aplicação. Agora, se tentamos só logar, veja que ele já vai mandar aquela mensagem para cada um dos campos.
+
+[04:02] “E-mail é obrigatório” e a “Senha é obrigatória”. Se colocarmos uma informação no campo do e-mail, a mensagem vai desaparecer com aquele erro. Se colocarmos uma informação no campo da senha, ele desaparece com a mensagem da senha e faz a validação do Firebase Authentication. Se tirar só o e-mail e deixar a senha também, ele deixa com a mensagem exclusiva.
+
+[04:22] Então conseguimos colocar a mesma implementação que fizemos na tela de cadastro, só que agora fizemos aqui também na tela de login. O próximo passo, só para finalizar, é justamente fazer a devida refatoração. Então já vamos aproveitar e refatorar esse código. Para isso, pegamos esse que limpa os campos, chamamos de "limpaCampos", vou deixar dessa forma o método.
+
+[04:47] Aqui não precisamos fazer nenhum tipo de extração, porque ele já tem a informação, ele está nos devolvendo, já está bem extraído. Aqui, na parte da validação, podemos fazer o "validaCampos". Podemos até mesmo olhar um pouco dessa implementação e perceber se tem alguma coisa a mais. Não, aparentemente não tem. Beleza, tranquilo.
+
+[05:07] No var valido podemos trabalhar com val ao invés do var, porque realmente já estamos pegando o retorno de um método. Ou, se você preferir, dado que não fizemos isso, na tela de cadastro, podemos justamente usar aqui o próprio if(validaCampos(email, senha)) diretamente. Podemos fazer isso, dessa forma você evita criar uma variável a mais. Então fica também a seu critério decidir o que acaba sendo melhor para você.
+
+[05:32] E aqui no if(validaCampos, podemos indicar que todo esse código, por mais que ele seja pequeno, vamos ver que ele é grande, podemos simplesmente chamar o nosso "autentica", podemos falar que é o método autentica do próprio fragment de login, que autentica dele chama o view model, que vai lá e vai chamar o autentica, e assim por diante.
+
+[05:54] Então essa é uma das maneiras que podemos fazer. Vou tirar essa linha vazia. Tranquilo. E, por fim, o que podemos fazer também é a extração de cada configuração de botão. Então esse será o "configuraBotaoLogin", para ficar claro que esse código faz toda a configuração do botão login. E esse é o "configuraBotaoCadastro", então aqui também fica claro para nós.
+
+[06:20] Veja que eu estou mandando a view no configuraBotaoLogin(view), não é algo necessário, então eu estou tirando. Também vou tirar dessa parte, do private fun configuraBotaoLogin. Nós podemos usar a view do prórprio fragment, o que precisamos fazer apenas - deixa eu só tirar aqui, olha só, desencadeou para vários pontos.
+
+[06:34] O que podemos fazer aqui é usar a property que existe aqui do fragment. Então podemos chegar no .snackBar e usar essa property, que ele chama o snackbar com a view do próprio fragment, sem mandar do onViewCreated, então view?.snackBar(mensagemErro) ^let.
+
+[06:47] Então aqui nós conseguimos fazer. Se você preferir, faça o teste agora, antes de mexer em mais partes do código, porque fizemos bastante passos de refatoração. Só para garantir, vamos só ver com testes muito rápidos, direcionados mais para a tela, para ver se tudo funcionou. Vamos lá. Só mandando o e-mail ele deu aquele problema. Só mandando a senha, ele também apresenta o problema.
+
+[07:12] Então conseguimos fazer a nossa validação, ela está funcionando corretamente. O próximo passo é só verificar realmente o que fizemos no view model e também no nosso repositório. Então entramos no LoginViewModel, no autentica, e basicamente o que precisamos fazer é tirar esse private val repository: LoginRepository, porque agora não utilizamos mais.
+
+[07:32] Dado que não utilizamos mais, o que precisamos fazer? Remover esse código do nosso projeto, porque ele não pode ficar com um código morto, que ninguém usa, e que ele só existe por existir. Então deixa eu tirar ele, eu cliquei aqui duas vezes sem querer. Agora eu vou remover esse código, o LoginRepository, para conseguirmos tirar ele do nosso projeto.
+
+[07:54] Quando eu fiz isso, teremos alguns pontos do código que podem quebrar, como é o caso do nosso AppModules, que ele estava utilizando esse LoginRepository para poder criar uma injeção de dependência. Então não temos mais ele e tiramos do import. Se tiver mais alguma coisa, durante a execução o Android Studio vai nos falar.
+
+[08:12] Então aqui não tem nenhum problema. Agora aqui, no viewModel<LoginViewModel> temos que tirar o get(), que vem do LoginViewModel, porque não pegamos mais o LoginRepository. Beleza, aqui o nosso Koin, que é onde configuramos os módulos, já está funcionando.
+
+[08:27] Voltando para o LoginViewModel, beleza, aparentemente não tem alguma coisa que precisamos modificar. O que precisamos ver agora é justamente no nosso FirebaseAuthRepository, porque aqui temos mais um pouco de código. Então o que podemos fazer é basicamente, nessa parte que pega mensagem, podemos simplesmente fazer a mesma técnica que fizemos aqui em cima.
+
+[08:47] Podemos usar até mesmo o mesmo nome, que seria devolve erro, aqui em cima é de cadastro, agora vai ser o de login ou de autenticação, da maneira que você preferir. "devolveErrodeAutenticação". Então é isso que eu estou fazendo aqui para nós. Dessa forma conseguimos deixar bem mais claro o que precisamos.
+
+[09:06] Perceba que a extração dele, ele mandou diretamente a tarefa, sendo que o que ele precisa de verdade é a exception. Então aqui, no val mensagemErro: String = when, podemos até usar alguns atalhos para nos ajudar, que seria o "Ctrl + Alt + P", que ele vai tornar essa variável, membro ou o que estivermos usando, em um parâmetro da função.
+
+[09:23] Então indicamos que é da função que nós queremos, e ele vai lá e simplesmente coloca para nós. Nesse caso, ele colocou when(exception), teve algum problema que deu, que ele não conseguiu colocar para nós automaticamente, deixa eu só tentar mais uma vez, só para ver se eu consigo.
+
+[09:39] Então aqui when(exception), deixa eu ver se ele vai conseguir fazer isso. Ele não conseguiu, então vamos fazer manualmente. Basicamente, agora que temos aqui a nossa exception, nós pegamos a tarefa.exception, mandamos no devolveErroDeAutenticacao(tarefa.exception).
+
+[09:52] E aqui dentro simplesmente pegamos a nossa exception, que seria private fun devolveErroDeAutenticacao(exception: Exception). Agora, dessa forma, nós já conseguimos fazer esse nosso código. É importante notar que essa exception, ela é nula, então podemos também trabalhar com nulo, porque quando fizermos essa validação, se ela for nula, ele entra no else, então podemos deixar dessa forma.
+
+[10:13] Por fim, só precisamos tirar essa variável return mensagemErro, que não é necessária, podemos retornar diretamente no when. Podemos fazer, por exemplo, return when (exception), ou transformar isso em uma expressão. Deixa eu selecionar esse código e ver se ele coloca para nós aquela conversão para expressão, então é uma outra maneira que podemos fazer para colocar realmente essa implementação no nosso método.
+
+[10:34] "Ctrl + Alt + L" para formatar, sempre vá fazendo essas devidas modificações. Agora vamos só executar aqui, só para poder testar esse último fluxo e finalizar essa parte da refatoração. Aparentemente eu acredito que isso seja o suficiente para refatorar o nosso código. Então vamos lá. No primeiro teste, podemos colocar o "t" e "t".
+
+[10:53] Ele vai colocar aqui - log catch, cadê? Ele identificou isso. Mas a mensagem foi a mesma. É isso que esperamos mesmo. Então agora "teste@aluraesporte.com", com uma senha incorreta, mas que, entre aspas, é válida por ter pelo menos 6 dígitos.
+
+[11:11] Ele vai mandar aqui, vai identificar que o problema era a senha, mas não falou nada para o nosso usuário especificamente. E, por fim, precisamos testar o e-mail que ele é válido em questão de formato, mas ele não existe, que seria aquele "teste.suporte@aluraesporte.com" que nós vimos. Então senha "teste1".
+
+[11:26] O e-mail não existe, ele vai identificar que é não existe mesmo, mas ainda mantém a mesma mensagem. Só para finalizar, basicamente eu vou colocar o nosso "teste1" e vou modificar para o e-mail que é válido, para ver se está funcionando também, isso é muito importante. Então está funcionando, agora sim fechamos a nossa tela de login.
+
+@@04
+Adicionando a tela da minha conta
+
+[00:00] Agora que finalizamos o comportamento de autenticação utilizando o Firebase Authentication, o nosso próximo passo é identificar qual é o usuário que logou dentro do nosso aplicativo. Ou seja, identificar se foi o "alex@aluraesporte.com", se foi o "teste@aluraesporte.com" e assim por diante. Vamos criar uma tela que nos mostre essa informação após o nosso usuário autenticar.
+[00:26] A ideia, basicamente, será adicionar mais um menu no bottom navigation que será chamado de minha conta, e ele terá essa informação para nós. Então vamos começar com essa implementação. Dado que teremos essa implementação de tela, vamos começar com essa parte visual e, depois que terminamos a parte visual, vemos como fazemos com o Firebase Authentication.
+
+[00:45] Então, voltando no Android Studio, dado que estamos utilizando o bottom navigation, o Navigation em si, que é o Architecture Components, vamos colocar primeiro o "menu_principal_bottom_navigation", porque é a partir desse menu que conseguimos colocar mais itens.
+
+[00:57] Então eu vou duplicar esse último menu, que é o de pagamentos, e vou modificar as informações, para que agora seja android:id="@+id/minhaConta". Na parte do ícone precisamos mudar também, precisamos colocar um ícone que seja compatível com a parte da conta. Então primeiro eu só vou colocar nesse title android:title="Minh conta" />.
+
+[01:18] E vou só executar, para ver se pelo menos aparece esse menu para nós, ver se realmente essa primeira parte fizemos da maneira esperada. Então vamos só aguardar o Android Studio finalizar a execução, ele está finalizando. Pronto, ele conseguiu colocar para nós esse outro menu.
+
+[01:34] É claro, ele não consegue acessar justamente por quê? Porque não temos uma tela para ele, então precisamos sim colocar uma tela para ele. Mas agora também precisamos de um ícone, que seja mais específico para a minha conta, porque não faz sentido ser esse de pagamentos. Então vamos adicionar um ícone para nós, que será a partir de um "Alt + Insert", eu vou colocar o "Vector Asset", que seria um asset de vetor.
+
+Imagem da caixa de diálogo "Asset Studio" do Visual Studio Code. Há o campo "Asset Type:" com a opção "Clip Art" selecionada, outro campo de texto "Name:" preenchida com "k_action_minha_", campo "Clip Art:" com uma opção contendo uma figura que representa os ombros e a cabeça de uma pessoa, campo "Size:" preenchido com "24dp X 24dp", campo "Color:" e "Opacity" no nível de "100%". Ao lado dos campos, há uma área quadriculada com a figura representativa de uma pessoa ao centro.
+
+[02:01] E eu vou chamar esse cara de "ic_action_minha_conta", assim como usamos nos padrões dos outros ícones. Então "minha_conta", beleza, aqui eu vou clicar no "Next", "Finish". Agora eu vou mudar o ícone e vamos ver o que acontece, agora que fizemos essa modificação android:icom="@drawable/ic_action_minha_conta".
+
+[02:23] Então eu vou executar e vamos ver se ele apresenta esse novo ícone que acabamos de colocar. Vamos ver aqui. Vamos só aguardar o Android Studio finalizar, está finalizando.
+
+[02:35] Aqui ele nos mostra o minha conta, com o ícone bonito. Então essa primeira parte nós fizemos. Agora, o próximo passo é modificar no nosso "navi_graph", que é ele quem ficará responsável em identificar se é uma lista de pagamentos, se é uma lista de produtos ou, se agora, é a minha compra, que seria a tela de minha compra - aliás, minha conta, falei errado.
+
+[02:56] Aqui, dentro do "navigation> navi_graph", precisamos de um novo destino para que ele consiga identificar qual é a tela que precisamos. Preciso criar agora de fato um novo destino. Esse novo destino podemos criar aqui a partir do Navigation, e eu vou colocar a partir de um blank, vou deixar um fragment vazio para fazermos manualmente.
+
+[03:20] Então eu vou deixar o fragment vazio e eu vou chamar ele de "MinhaContaFragment". E o nome do layout vai ficar "fragment_minha_conta", eu vou deixar só "minha_conta", que eu estou usando meio que esse padrão. Então será "minha-conta", e será na linguagem Kotlin. Botão "Finish".
+
+[03:39] Ele criou para nós a tela, temos o "minha_conta". O que precisamos modificar também aqui será exatamente o id, ele precisa ser exatamente esse "minhaConta", como estamos vendo aqui, para ele bater com o bottom navigation, porque se pegamos o "listaPagamento", "listaPagamento" é o id. Esse novo será "minhaConta", para ele bater conosco.
+
+[03:59] Na label também vou modificar, para que seja "Minha Conta", porque é essa informação que estamos usando quando colocamos no nosso BaseFragment, para podermos nomear cada um dos destinos que colocamos e temos no nosso wap bar a informação do título, que seria essa informação da barra de cima do aplicativo.
+
+[04:18] Então essa barra pega a parte dessa label. E o nome da classe está tudo certo, é isso mesmo, não temos mais o que modificar. A nossa modificação agora vai ficar mais na parte do código, para poder pegar a informação que vem do Firebase Authentication e colocar aqui para nós. Como também, uma das coisas que podemos fazer aqui é modificar um pouco o layout, mas vamos fazer isso como segundo passo.
+
+[04:37] Vamos resolver essa parte do Navigation primeiro e, no segundo passo, vamos no código, modificamos o layout, e vemos como podemos fazer a integração com o Firebase. Então só vamos executar, para verificar como ficou essa modificação. Agora temos a lista de produtos, pagamentos e agora temos o Minha Conta.
+
+[04:57] Ele está mostrando esse hello blank fragment. Agora temos que fazer essas modificações. Então vamos lá. Basicamente vamos entrar no MinhaContaFragment e ele já colocou um monte de coisas que não precisamos. Isso é um pouco ruim quando trabalhamos com esses fragments que vem diretamente do Android Studio.
+
+[05:17] A primeira coisa que eu vou fazer é apagar o que não precisamos de verdade e deixar só o que é necessário. Deixa eu tirar aqui essas informações. O OnCreateView é necessário, então deixamos do jeito que está. Esse companion object não é necessário, que é a parte de criar a instância, quem fará isso agora vai ser exatamente o Navigation.
+
+[05:36] O que precisamos aqui é o onCreateView. Se quisermos mexer com alguma coisa, depois que ela foi criada, o onViewCreated. Então esses são os métodos que precisamos mexer para trabalharmos com esse MinhaContaFragment. Agora só vamos mexer um pouco na nossa tela, para termos uma coisa um pouco diferente e modificar um pouco o nosso código.
+
+[05:55] Basicamente, no TextView, vamos usar ele mesmo para poder indicar qual é o e-mail do usuário, então vou chamar de android: id="@+id/minhaConta_email", vou fazer apenas essa informação muito simples, e eu só vou deixar um pouco mais destacado para vermos o resultado, então android: textSize="", eu vou deixar com "16sp", ainda é pequeno. Vou deixar então - a outra base 8 seria "24".
+
+[06:18] Eu acho que já está bom, parece bom. Vamos ver na aplicação e vamos ver como fica. Aqui, no android:text eu vou deixar como tools, não necessariamente agora, vou deixar como esse /hello_blank_fragment" /,, só para vermos como fica. Depois, terminando isso, nós deixamos como tools para só vermos aqui na tela.
+
+[06:35] Então vamos lá, está executando. Vamos só aguardar o Android Studio finalizar. Ele vai finalizar aqui para nós. Agora, entrando no Minha Conta, temos o hello blank fragment.
+
+[06:46] Agora sim já temos toda a estrutura necessária para colocar então a informação que precisamos. Aqui eu deixo esse android: tools= para poder - aliás, o tools é antes, ele vem no name space, o tools é para poder deixar apenas aqui na tela, tools: text. Se vermos agora, diretamente no nosso fragment, que vem no Minha Conta, ele fica vazio.
+
+[07:08] Porque o tools, ele fica só no preview. Aqui sim podemos simular um e-mail, que seria o tools: text="alex@aluraesporte.com" />. Se você preferir, você pode deixar também o nome de "teste@aluraesportes.com" / >, o nome que você preferir. Então ele fica nos mostrando.
+
+[07:21] Pode-se colocar uma margem, enfim, essa parte de edição de tela eu vou deixar mais por sua conta, porque o nosso objetivo é fazer a integração. Então essa parte nós finalizamos, temos aqui o MinhaContaFragment. O que precisamos agora é do view model. Precisamos do view model para poder acessar o repositório e assim por diante. Então vamos criar também esse view model.
+
+[07:42] Então vamos lá, cadê? Colocando aqui, no menu lateral esquerdo, "ui > viewmodel", vamos criar agora o view model para o Minha Conta, então "Kotlin > class", vamos chamar de - selecione classe, é claro - "MinhaContaViewModel". Vamos fazer isso. Agora que temos o MinhaContaViewModel, basicamente pegamos a extensão do view model, class MinhaContaViewModel : ViewModel(){}.
+
+[08:08] Aqui podemos simplesmente fazer o seguinte, podemos pedir que ele nos devolva um e-mail, só para ter uma mínima integração, que eu vou chamar de e-mail apenas, vou colocar até como property, então val email, só para termos apenas um esboço do que vamos fazer depois.
+
+[08:23] val email: String =, eu vou colocar aqui Alex. Vou deixar bem fixo mesmo, só para testarmos, então = "alex@aluraesporte.com", não vou nem colocar Gmail, é "aluraesporte". = "alex@aluraesporte.com". Aqui é o nosso view model. Só para garantir que terá essa integração, com esse fluxo, vamos agora fazer a configuração do Koin, para ele injetar o view model e acessarmos esse e-mail diretamente no onViewCreated.
+
+[08:47] Então vamos fazer isso. Para isso, vamos entrar no nosso AppModules e aqui dentro vamos colocar o view model. Então aqui dentro teremos o viewModel<, que será chamado de <MinhaContaViewModel>{}. Vamos abrir essas chaves e vamos criar uma instância dele, então { MinhaContaViewModel() }.
+
+[09:07] Um ponto importante, que já podemos considerar nesse momento, é já colocar que ele terá uma dependência, uma class MinhaContaViewModel(private val repository: FirebaseAuthRepository) : ViewModel() do Firebase - cadê? Eu vou chamar de (private val firebaseauth) - ou só (private val repository), da mesma maneira como fizemos anteriormente, repository, e do Firebase.
+
+[09:26] Ele colocou aqui para nós. Pedimos para ele resolver aqui também, no nosso AppModules, ele vai conseguir resolver com o get, { MinhaContaViewModel(get()) }. Pronto, já teremos acesso a esse nosso view model. E aqui, no MinhaContaFragment, no class MinhaContaFragment: Fragment() em branco, no caso da MinhaConta aqui, só vamos pegar essa dependência para ver se ela está funcionando.
+
+[09:45] Então vamos fazer da seguinte maneira: private val viewModel by, e vamos então pedir para ele fazer um inject, então by inject(). É claro, para fazer isso aqui, o que vamos precisar? Deixa eu só colocar aqui como Koin o inject(). No caso é view model, que o view model, ele é diferente, então private val viewModel by viewModel().
+
+[10:09] Aqui também do Koin, tem que ser do Koin, não precisa colocar essas informações de chaves, só fazer isso private val viewModel by viewModel(), porque precisamos declarar o tipo. Então colocamos como private val viewModel: MinhaContaViewModel by viewModel(), e ele já consegue fazer isso para nós.
+
+[10:21] Confira o import, pra ver se realmente é o do Koin. Beleza, é o do Koin. Por fim, o que só precisamos fazer é ver se essa informação que pegamos do MinhaContaViewModel, ela aparece na tela, é um teste muito simples antes de fazermos os próximos passos.
+
+[10:34] Então aqui no MinhaContaFragments, no onViewCreated, teremos o minha_conta_email.text(viewModel.email), eu vou pegar o viewModel e vou pegar o email, só para testarmos e vermos se essa parte, ela funciona. Então aqui ele está indicando que podemos usar a property, porque ele é um text view.
+
+[10:52] Se formos no minha_conta, vamos dar uma olhada. É um text view, então podemos usar a property que não tem nenhum problema, é aquele caso do edit text. Então vamos só executar para ver se essa parte, ela funcionou. Se ela funcionar, estaremos preparados para fazer os próximos passos. Na aplicação, aqui temos os Pagamentos, Minha Conta.
+
+[11:11] Ele já nos mostra a informação. Então a parte de esboço que precisávamos fazer inicialmente é essa aqui. A seguir, só vamos fazer as devidas modificações para então pegar a informação que vem do Firebase e colocar aqui nessa tela para nós. Até já.
+
+@@05
+Apresentando o e-mail do usuário logado
+
+[00:00] Conseguimos implementar a tela de Minha Conta, porém existem mais alguns detalhes, em relação à estrutura, que precisamos fazer, que estão relacionados também com o nosso BaseFragment. Como eu havia comentado, para colocar o título na app bar, nós precisávamos do BaseFragment, mas, na verdade, isso é uma configuração direta no destino.
+[00:19] Então não necessariamente precisamos de um BaseFragment para colocar título nessa barra, como podemos ver.
+
+[00:24] Mas, além disso, o BaseFragment, ele é importante para que tenhamos comportamentos que o Pagamentos e o Produtos tem, que é o logout e aquele comportamento que a cada vez que entramos no destino, como é o caso do Produtos ou Pagamentos, verifica se o usuário está logado.
+
+[00:38] Nós não temos esse comportamento no Minha Conta por conta da falta desse BaseFragment. Então aqui, no class MinhaContaFragment: BaseFragment(), basicamente, só precisamos colocar com o BaseFragment, que ele já coloca isso para nós. E podemos testar o nosso código, para ver se ele funciona da maneira como esperamos. Então aqui, vamos na Minha Conta.
+
+[00:56] Ele já tem agora esses comportamentos, simples assim. Podemos fazer o logout para testar e ver se funciona, tudo bonito. Vou colocar o e-mail "teste@aluraesporte.com", "teste1", "Logar". Vamos ver se ele consegue entrar novamente sem nenhum problema.
+
+[01:12] Então veja que não tivemos nenhum problema adicionando esse comportamento a mais. Agora que fizemos isso, o próximo passo é justamente modificar a comunicação que estamos fazendo com o view model da Minha Conta, para que, de verdade, ele pegue o usuário logado para nós.
+
+[01:28] Para isso, podemos fazer de uma maneira bem objetiva mesmo, que é pedindo uma property, chamada val usuario: LiveData<Usuario>, do nosso próprio modelo, não será um modelo que vem do FirebaseAuthRepository. Por que vamos tomar essa decisão? Porque hoje nós utilizamos o FirebaseAuthRepository, mas amanhã, em algum outro momento, pode ser que você não queira mais usar o FirebaseAuthRepository.
+
+[01:53] Ou pode ser que o FirebaseAuthRepository, ele mude o seu modelo, deixando algumas incompatibilidades. Dado que objetivo é evitar que o nosso projeto, antes de chegar nas telas e etc., quebre, precisamos resolver sempre nessa parte do view model, precisamos sempre converter o modelo que vem da ferramenta que estamos integrando com o nosso modelo de verdade.
+
+[02:14] Então, se o nosso usuário, ele precisa de e-mail, criamos um usuário só nosso que só precisa do e-mail. Se o nosso usuário precisa de senha, colocamos também a senha, e assim por diante, nós mexemos diretamente no nosso modelo, que conseguimos modificar, as coisas que vem do Firebase, nós não conseguimos
+
+[02:29] Então esse é um feedback muito importante para que você entenda que você usa o modelo diretamente de Firebase, você corre esses riscos. É por isso que a tomada de decisão aqui é usar o modelo nosso, fazer a conversão para o modelo nosso. Agora que eu passei esse feedback, eu vou usar o repository e vou pedir para que ele devolva um usuário a partir de uma função.
+
+[02:50] val usuario: LiveData<Usuario> = repository.usuario(). Essa função, ela será criada, devolvendo um fun usuario(): LiveData<Usuario>{. E já podemos começar criando um val liveData, nada de private. val liveData = MutableLiveData<Usuario>(), basicamente é isso.
+
+[03:08] Por fim, retornamos esse return liveData e aqui, no meio do código, é fazer a mesma coisa de antes, é pegar o nosso usuário, a partir daquele firebase.currentUser. Aqui ele terá as informações que ele tem no Firebase Authentication. Mas, para isso, temos que acessar a instância dele, garantindo que não é nula, que acessemos esse FirebaseUser.
+
+[03:29] firebaseAuth.currentUser?.Let { firebaseUser : FirebaseUser. Vou até deixar esse texto aqui, para você ver, firebaseUser. A partir dele nós percebemos que ele dará acesso, por exemplo, ao e-mail, que é o que precisamos nesse caso. Então, o que poderíamos fazer?
+
+[03:38] Basicamente poderíamos pegar o liveData.value = e pedimos para ele criar um usuário para nós, colocando aqui, por exemplo, = Usuario(firebaseUser.email, senha> ""). Aqui vamos ver que temos uma senha, uma senha que, por enquanto, é obrigatória, mas nesse caso não precisamos, até mesmo podemos modificar um pouco aqui, falar que ele é uma informação que, a princípio, não é obrigatória, ela é opcional.
+
+[04:03] É claro, essa não é a melhor maneira de implementar aqui o usuário, você pode, por exemplo, criar usuários específicos para isso, mas dado que não é muito bem o objetivo do curso, e estamos só fazendo essa parte inicial da integração, não precisamos ficar colocando as melhores práticas, você também pode fazer isso conforme tudo o que aprendemos aqui durante os cursos da Alura.
+
+[04:25] Então vamos deixar dessa forma, só para podermos simplificar aqui o exemplo. Agora só precisamos garantir, por exemplo, que o e-mail, ele não é nullable, porque ele também é uma informação que pode não pode existir. Aqui, basicamente, pegamos o firebaseUser.email?.Let{}, colocamos um safe call com o let.
+
+[04:43] E, por fim, indicamos que isso é o e-mail a partir da expressão lambda, e mandamos o e-mail, é simples assim. Então essa é uma solução que já resolve o nosso problema, ela já consegue fazer essa integração para nós. Só precisamos voltar aqui um pouco, para ver se compila no view model, compila.
+
+[05:03] Não precisa ser uma property, porque aqui já estamos usando diretamente uma outra property, o repository. Não precisamos mais dessa property de e-mail, porque ela é fixa, agora estamos trabalhando diretamente com a integração do Firebase.
+
+[05:15] Em seguida, só precisamos modificar o nosso MinhaContaFragment, porque ele está mandando a informação. Então aqui dentro nós pegamos o viewModel.usuario.observe(viewLifecycleOwner, Observer{}) e vamos começar a fazer a nossa lógica, que é garantir que esse usuário, que estamos recebendo, ele não é nulo, vou chamar de it?.Let{usuario: Usuario ->} a expressão lambda.
+
+[05:41] Aqui dentro pegamos o minha_conta_email.text =, como vimos que podemos trabalhar com a property, = usuario.email. Dessa forma sim, estamos fazendo a integração para colocar a informação que esperamos de cada um dos usuários. Então, por exemplo, aqui na aplicação, eu vou ter o "teste@aluraesporte.com".
+
+[06:04] É o usuário que colocamos. Podemos testar com outro. Vou colocar o "alex@aluraesporte.com". A senha, se eu não me engano, é "teste123". Vamos ver aqui se é isso mesmo? Deu certo. Vamos ver aqui no Minha Conta.
+
+[06:18] Olha só, ele conseguiu fazer. Então essa parte de colocar qual foi o usuário que autenticou, já conseguimos colocar. Agora sim finalizamos então o nosso projeto. Até mais.
+
+@@06
+Sobre apresentar o usuário
+
+Durante a aula implementamos a tela para apresentar informações do usuário logado. Considerando o que foi visto, marque a alternativa correta:
+
+O repositório do Firebase Authentication é dispensável quando precisamos das informações do usuário logado.
+ 
+Alternativa correta
+A boa prática é converter o usuário do Firebase Authentication para um usuário da regra de negócio do App.
+ 
+Alternativa correta! Isso mesmo! Com essa técnica evitamos o forte acoplamento com o Firebase Authentication e temos a capacidade de trocar de implementação na integração do serviço de autenticação.
+Alternativa correta
+A apresentação das informações do usuário do Firebase Authentication dispensa o uso do LiveData.
+ 
+Alternativa correta
+Precisamos utilizar o usuário do Firebase Authentication em todo App para identificar as informações.
+
+@@07
+Faça como eu fiz
+
+Apresentando mensagens de erro no Login
+Apresente a mensagem de erro na tela de login de acordo com a Exception lançada. Utilize a mesma técnica feita na tela de cadastro.
+
+Em vídeo, utilizamos a mesma mensagem para ambas Exceptions esperadas na autenticação.
+Validação e refatoração de código
+Em seguida, evite o problema de campos vazios colocando um try catch ao autenticar, e validando o formulário de login com as mesmas técnicas usadas na tela de cadastro.
+
+Então, refatore o código aplicando a extração de métodos. Lembre-se também de remover referências que não são mais utilizadas.
+
+Adicionando a tela Minha conta
+Adicione a tela pra representar a conta do usuário. Para isso, crie:
+
+Um novo destino no grafo de navegação com um Fragment e layout pra representar a nova tela;
+O layout precisa apenas de um TextView para apresentar o e-mail do usuário
+Adicione um novo menu com o mesmo nome da label do destino;
+Adicione um novo asset para representar o ícone do menu;
+Com o destino e menu configurados, teste o App e veja se acessa o novo destino pela BottomNavigationBar. Se tudo der certo, crie:
+
+Um ViewModel para a tela Minha Conta e adicione uma property com um e-mail;
+Dentro do onViewCreated do Fragment, adicione o e-mail no TextView.
+Confira se o e-mail é apresentado ao entrar na tela Minha conta.
+
+Apresentando o e-mail do usuário logado
+Apresente o e-mail do usuário logado. Para isso, crie:
+
+Um método no repositório para devolver um usuário em um LiveData;
+Devolva o usuário apenas com o e-mail, para isso, faça com que a property senha tenha um valor padrão vazio;
+No ViewModel, crie um método que devolva o usuário que vem do repositório;
+Observe o LiveData e insira o e-mail do usuário no TextView.
+Teste o App e confira se apresenta o e-mail do usuário logado. Para o teste, utilize pelo menos dois usuários diferentes.
+
+Ao rodar o App ele deve apresentar as mensagens dos possíveis problemas na tela de login.
+Também, a tela de login deve evitar de quebrar o App quando receber informações vazias, fazendo as devidas validações.
+
+Ao logar no App, deve apresentar um novo menu no BottomNavigationBar que apresenta o e-mail do usuário logado.
+
+Apresentando mensagens de erro no Login
+Validação e refatoração de código
+Adicionando a tela Minha conta
+Apresentando o e-mail do usuário logado
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/df8871d629a48933acc42c1a9b699e93e834fd9b
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/256d088ce3a636e25aa8acb94a9ed48798c6ee0b
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/8de4e9adc5de1b6096816c54f759b1d5485c6685
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/commit/f2b0f5f7807f31274dd0917b51ce01e7380554b8
+
+@@08
+Projeto do curso
+
+Você pode baixar ou acessar o código fonte via Github do projeto final.
+
+https://github.com/alura-cursos/Firebase-Authentication-Android/archive/aula-5.zip
+
+https://github.com/alura-cursos/Firebase-Authentication-Android
+
+@@09
+O que aprendemos?
+
+Nesta aula aprendemos:
+Como criar um novo destino na BottomNavigationBar;
+Como pegar as informações do usuário do Firebase e converter para o usuário do App;
+Como apresentar as informações do usuário logado.
+
+@@10
+Conclusão
+
+[00:00] Chegamos ao final do curso de Android com Firebase Authentication. Se você chegou até aqui, você está de parabéns, porque durante esse curso, conseguimos evoluir o nosso projeto Alura Esporte, que trabalhava para Navigation, Architecture Components, para utilizar uma integração que permite a autenticação de usuários, isso sem a necessidade de configurarmos um back-end nosso.
+[00:23] Agora que chegamos nesse momento de conclusão, vamos revisar tudo o que passamos durante esse curso, para vermos o quanto evoluímos. Vamos começar. Logo no começo do nosso curso, vimos que o Firebase, ele é uma ferramenta, na qual ele permite utilizar diversos serviços, dentre eles, temos o FireBase Authentication.
+
+[00:43] Aqui, no Firebase Authentication, aprendemos que ele é uma ferramenta justamente para permitir essa autenticação de usuários, sem que tenhamos a necessidade de configurar um back-end. Para isso, precisamos fazer algumas configurações com o Firebase. Então aprendemos que temos o console do Firebase.
+
+[01:02] Que é onde nós conseguimos criar os nossos projetos, aprendemos a criar um projeto e, depois que criamos, trabalhamos diretamente com o dashboard, que é conseguimos acessar os serviços.
+
+[01:13] Aprendemos que, para usar o dashboard, para usar o Firebase, precisamos registrar um aplicativo, então aprendemos como adicionar um aplicativo, no caso um aplicativo Android. Adicionamos o seu pacote, colocamos as configurações no griddle e assim por diante.
+
+[01:30] Depois disso, trabalhamos diretamente aqui, na página dedicada ao Authentication, que seria justamente a página onde conseguimos verificar os usuários que foram logados, verificar os usuários que foram, no caso, cadastrados, e até mesmo é a maneira como podemos autenticar no Firebase Authentication.
+
+[01:50] Durante o curso usamos o e-mail e senha, mas vimos que também existem outros provedores que podemos utilizar. E, caso tenhamos interesse em fazer isso, podemos consultar a documentação que ele apresenta. O Firebase, ele tem uma documentação bastante grande e bacana.
+
+[02:06] As possibilidades que temos de autenticação, então vimos que temos essas possibilidades, vimos que que a documentação, ela está disponível para nós, e que podemos configurar para o Android da maneira que preferirmos. Usamos o e-mail e senha, mas vimos que também existem essas outras possibilidades.
+
+[02:22] Depois que tivemos essa introdução de como funciona o Firebase Authentication, fizemos a instalação e assim por diante, começamos diretamente no nosso projeto, criando os usuários a partir do código, usando os comportamentos padrões para verificar até mesmo se dava certo, se dava errado, com os listeners, com as tasks, e assim por diante.
+
+[02:41] O nosso primeiro desafio, depois de conhecer essas funcionalidades, foi integrá-las com o cadastro, que era justamente criar um usuário e também fazer com todo o procedimento para passar uma mensagem mais específica de algum possível problema, e assim por diante.
+
+[02:57] Então aprendemos que não basta apenas criar o usuário, também precisamos devolver mensagens para o nosso usuário, tanto na tela como também no momento em que cadastramos. Então se colocamos só mensagens de informações inválidas, o nosso usuário, ele precisa saber o que foi inválido e assim por diante. Então nós vimos que essa é a maneira na qual conseguimos integrar o nosso aplicativo Android com o Firebase.
+
+[03:19] E vimos que o padrão, ele é muito similar, seja aqui no cadastro como também seja aqui no comportamento de login. Novamente, aqui usamos uma técnica vinculando com a arquitetura do nosso aplicativo, mas você poderia usar a mesma técnica, vinculando com a sua arquitetura, não necessariamente só funciona essa arquitetura.
+
+[03:38] Os mesmos passos que nós vimos também funcionam em outras arquiteturas, a ideia é justamente pegar o fluxo que utilizamos para poder então fazer a mesma coisa para o seu aplicativo. E, por fim, o que fizemos foi justamente a autenticação e a apresentação do usuário que foi autenticado.
+
+[03:58] Então se fizermos um login, nós autenticamos e vamos no menu Minha Conta, que foi a última tela que nós adicionamos, vemos que conseguimos também colocar a informação do usuário, pegando do Firebase.
+
+[04:08] Vimos algumas boas práticas, refatoração de código, e assim por diante. Perceba que agora sim, nós colocamos um mecanismo inicial de autenticação no nosso aplicativo, isso de tal forma que não precisamos implementar um back-end, estamos utilizando aqui o serviço do Firebase para fazer tudo isso para nós. Agora o nosso aplicativo, ele ficou bem redondo nesse fluxo de autenticação e cadastro de usuários.
+
+[04:32] Então era isso que eu queria passar para vocês na parte de conclusão. Eu espero que você tenha gostado do curso, eu espero que você tenha aproveitado, feito o seu aplicativo, conseguido fazer a autenticação sem nenhum problema, cadastro também. É muito importante você passar um feedback para nós no fórum, falar até mesmo o que você gostou, o que não gostou.
+
+[04:53] No caso, no fórum, o feedback seria tirar dúvidas, ou então até mesmo postar sua dúvida, caso você tenha. O feedback via descrição do curso, para falar o que você gostou do curso, especificar ali: gostei do aplicativo, gostei do conteúdo do curso.
+
+[05:08] Deixar bem claro o que foi importante para você durante esse estudo e também até mesmo direcionar coisas que podem melhorar, isso é muito importante para a evolução do produto. Então era isso o que eu queria passar para você. Um forte abraço e até mais.
